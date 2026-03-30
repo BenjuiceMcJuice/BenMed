@@ -1,0 +1,853 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BenMed</title>
+<style>
+:root {
+  --bg:       #f0f4f8;
+  --surface:  #ffffff;
+  --surface2: #e8f0f7;
+  --border:   #c8d8e8;
+  --text:     #0f2030;
+  --muted:    #5a7a90;
+  --ok:       #0a7c4e;
+  --ok-bg:    #d1f5e4;
+  --ok-bd:    #6edbb0;
+  --warn:     #7a4f00;
+  --warn-bg:  #fff3cd;
+  --warn-bd:  #f0c040;
+  --danger:   #8b0000;
+  --danger-bg:#fde0e0;
+  --danger-bd:#e08080;
+  --info:     #005a9e;
+  --info-bg:  #dbeeff;
+  --info-bd:  #80bcf0;
+  --accent:   #006a9e;
+  --head-bg:  #0a3d5c;
+}
+* { box-sizing:border-box; margin:0; padding:0; }
+body { background:var(--bg); color:var(--text); font-family:-apple-system,Helvetica,Arial,sans-serif; min-height:100vh; padding:0 0 60px; font-size:15px; }
+
+.app-header { background:var(--head-bg); padding:14px 16px 12px; }
+.header-top { display:flex; align-items:center; justify-content:space-between; }
+.header-art { display:flex; gap:6px; align-items:flex-end; }
+.header-title { text-align:center; flex:1; }
+.header-title h1 { color:#fff; font-size:1.5rem; font-weight:800; letter-spacing:0.04em; }
+.header-title .sub { color:#90bcd8; font-size:0.65rem; letter-spacing:0.1em; text-transform:uppercase; margin-top:2px; }
+#clock { color:#7fd8ff; font-size:1.1rem; font-weight:700; letter-spacing:0.1em; text-align:center; margin-top:6px; }
+
+.warn-box { background:var(--warn-bg); border-left:4px solid var(--warn-bd); margin:12px 14px; padding:9px 12px; font-size:0.72rem; color:var(--warn); border-radius:0 6px 6px 0; line-height:1.6; }
+
+.sec-title { font-size:0.65rem; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:0.12em; margin:14px 14px 6px; }
+
+/* Summary table */
+.summary-wrap { margin:0 14px 14px; background:var(--surface); border:1px solid var(--border); border-radius:10px; overflow:hidden; }
+.sum-head { display:flex; background:var(--head-bg); padding:6px 10px; }
+.sum-hcell { font-size:0.58rem; font-weight:700; color:#90bcd8; text-transform:uppercase; letter-spacing:0.08em; }
+.sum-col1 { width:30%; flex-shrink:0; }
+.sum-col2 { width:26%; flex-shrink:0; }
+.sum-col3 { width:26%; flex-shrink:0; }
+.sum-col4 { width:18%; flex-shrink:0; text-align:right; }
+.sum-row { display:flex; align-items:center; padding:7px 10px; border-bottom:1px solid var(--border); }
+.sum-row:last-child { border-bottom:none; }
+.sum-row:nth-child(even) { background:var(--surface2); }
+.sum-c1 { width:30%; flex-shrink:0; font-size:0.72rem; font-weight:700; color:var(--text); }
+.sum-c2 { width:26%; flex-shrink:0; font-size:0.68rem; color:var(--muted); }
+.sum-c3 { width:26%; flex-shrink:0; font-size:0.68rem; font-weight:600; }
+.sum-c4 { width:18%; flex-shrink:0; font-size:0.68rem; font-weight:700; text-align:right; }
+.col-ok     { color:var(--ok); }
+.col-warn   { color:#b36b00; }
+.col-danger { color:var(--danger); }
+.col-muted  { color:var(--muted); }
+
+/* Pain tracker card */
+.pain-card { background:var(--surface); border:1px solid var(--border); border-radius:10px; margin:0 14px 10px; overflow:hidden; }
+.pain-head { background:var(--head-bg); padding:9px 14px; display:flex; justify-content:space-between; align-items:center; }
+.pain-head-title { color:#fff; font-weight:700; font-size:0.88rem; }
+.pain-last { color:#90bcd8; font-size:0.68rem; }
+.pain-btns { display:flex; padding:10px 10px 8px; gap:4px; }
+.pain-btn { flex:1; padding:9px 0; border:1px solid var(--border); border-radius:6px; background:var(--surface2); color:var(--text); font-weight:700; font-size:0.82rem; cursor:pointer; text-align:center; -webkit-appearance:none; }
+.pain-btn.p-low  { background:#d1f5e4; border-color:#6edbb0; color:#0a7c4e; }
+.pain-btn.p-mid  { background:#fff3cd; border-color:#f0c040; color:#7a4f00; }
+.pain-btn.p-high { background:#fde0e0; border-color:#e08080; color:#8b0000; }
+.pain-btn.p-sel  { box-shadow:0 0 0 2px var(--accent); }
+
+/* Pain graph */
+.graph-wrap { margin:0 14px 14px; background:var(--surface); border:1px solid var(--border); border-radius:10px; overflow:hidden; }
+.graph-head { background:var(--head-bg); padding:8px 12px; display:flex; justify-content:space-between; align-items:center; }
+.graph-head-title { color:#fff; font-weight:700; font-size:0.82rem; }
+.graph-day-nav { display:flex; align-items:center; gap:8px; }
+.day-nav-btn { background:none; border:1px solid #2a5878; border-radius:5px; color:#7fd8ff; font-size:0.85rem; cursor:pointer; padding:2px 9px; line-height:1.4; -webkit-appearance:none; }
+.day-nav-label { color:#90bcd8; font-size:0.7rem; min-width:52px; text-align:center; }
+.graph-daily-avg { background:var(--surface2); border-bottom:1px solid var(--border); padding:7px 12px; display:flex; align-items:center; justify-content:space-between; }
+.daily-avg-label { font-size:0.65rem; color:var(--muted); text-transform:uppercase; letter-spacing:0.08em; }
+.daily-avg-val { font-size:1rem; font-weight:800; }
+.daily-avg-val.avg-low  { color:var(--ok); }
+.daily-avg-val.avg-mid  { color:#b36b00; }
+.daily-avg-val.avg-high { color:var(--danger); }
+.daily-avg-val.avg-none { color:var(--muted); }
+.graph-body { padding:10px 8px 6px; }
+#pain-graph { display:block; width:100%; }
+
+/* Med cards */
+.card { background:var(--surface); border:1px solid var(--border); border-radius:10px; margin:0 14px 10px; overflow:hidden; }
+.card.ready     { border-left:4px solid var(--ok); }
+.card.waiting   { border-left:4px solid var(--warn-bd); }
+.card.exhausted { border-left:4px solid var(--danger-bd); }
+.card-head { display:flex; justify-content:space-between; align-items:center; padding:11px 14px 9px; }
+.med-name { font-weight:700; font-size:0.95rem; color:var(--text); }
+.badge { font-size:0.58rem; font-weight:700; padding:3px 8px; border-radius:20px; text-transform:uppercase; letter-spacing:0.07em; }
+.b-ok   { background:var(--ok-bg);     color:var(--ok);     border:1px solid var(--ok-bd); }
+.b-wait { background:var(--warn-bg);   color:var(--warn);   border:1px solid var(--warn-bd); }
+.b-done { background:var(--danger-bg); color:var(--danger); border:1px solid var(--danger-bd); }
+.b-none { background:var(--info-bg);   color:var(--info);   border:1px solid var(--info-bd); }
+.card-body { border-top:1px solid var(--border); padding:0 13px 12px; }
+.stats { display:flex; flex-wrap:wrap; gap:6px; margin:10px 0; }
+.stat { background:var(--surface2); border:1px solid var(--border); border-radius:7px; padding:7px 9px; width:calc(50% - 3px); }
+.slabel { font-size:0.56rem; color:var(--muted); text-transform:uppercase; letter-spacing:0.07em; margin-bottom:2px; }
+.sval { font-size:0.78rem; color:var(--text); font-weight:600; }
+.sval.hi   { color:var(--accent); }
+.sval.ok   { color:var(--ok); }
+.sval.warn { color:#b36b00; }
+.sval.red  { color:var(--danger); }
+.btn { display:block; width:100%; padding:11px; border:none; border-radius:7px; font-weight:700; font-size:0.85rem; cursor:pointer; margin-top:4px; text-align:center; -webkit-appearance:none; }
+.btn-go   { background:var(--accent); color:#fff; }
+.btn-last { background:#b36b00;       color:#fff; }
+.btn-wait { background:var(--warn-bg); color:var(--warn); border:1px solid var(--warn-bd); }
+.btn-done { background:var(--danger-bg); color:var(--danger); border:1px solid var(--danger-bd); }
+.set-toggle { display:flex; justify-content:space-between; align-items:center; font-size:0.68rem; color:var(--muted); cursor:pointer; margin-top:9px; padding-top:9px; border-top:1px solid var(--border); }
+.set-panel { display:none; margin-top:9px; background:var(--surface2); border:1px solid var(--border); border-radius:7px; padding:11px; }
+.set-panel.open { display:block; }
+.set-row { display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; }
+.set-row label { font-size:0.63rem; color:var(--muted); text-transform:uppercase; letter-spacing:0.05em; flex:1; }
+.set-row input { background:var(--surface); border:1px solid var(--border); border-radius:5px; color:var(--text); font-size:0.8rem; padding:5px 7px; width:76px; text-align:right; -webkit-appearance:none; }
+.save-btn { width:100%; padding:7px; background:none; color:var(--accent); border:1px solid var(--accent); border-radius:6px; font-size:0.75rem; cursor:pointer; margin-top:7px; -webkit-appearance:none; }
+
+/* History */
+.hist-wrap { margin:0 14px; }
+.hist-list { background:var(--surface); border:1px solid var(--border); border-radius:10px; overflow:hidden; }
+.hist-item { display:flex; justify-content:space-between; align-items:center; padding:9px 13px; border-bottom:1px solid var(--border); }
+.hist-item:last-child { border-bottom:none; }
+.hist-item:nth-child(even) { background:var(--surface2); }
+.hist-info { flex:1; }
+.hist-name { font-weight:700; font-size:0.78rem; }
+.hist-name.is-med   { color:var(--accent); }
+.hist-name.is-pain  { color:#b36b00; }
+.hist-time { color:var(--muted); font-size:0.65rem; margin-top:1px; }
+.hist-actions { display:flex; gap:2px; }
+.del-btn  { background:none; border:none; color:var(--muted); font-size:0.95rem; cursor:pointer; padding:4px 7px; -webkit-appearance:none; }
+.edit-btn { background:none; border:none; color:var(--muted); font-size:0.85rem; cursor:pointer; padding:4px 7px; -webkit-appearance:none; }
+.empty { text-align:center; color:var(--muted); font-size:0.75rem; padding:18px; }
+.clear-btn { display:block; width:100%; margin-top:8px; padding:8px; background:none; border:1px solid var(--border); border-radius:8px; color:var(--muted); font-size:0.72rem; cursor:pointer; -webkit-appearance:none; }
+
+/* Modal */
+.modal-overlay { display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(10,30,50,0.6); z-index:100; }
+.modal-overlay.show { display:block; }
+.modal { position:absolute; left:50%; top:50%; background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:20px; width:290px; margin-left:-145px; margin-top:-120px; box-shadow:0 8px 32px rgba(0,0,0,0.2); }
+.modal-title { font-weight:700; font-size:1rem; color:var(--text); margin-bottom:4px; }
+.modal-sub { color:var(--muted); font-size:0.7rem; margin-bottom:16px; }
+.modal-row { margin-bottom:12px; }
+.modal-row label { display:block; font-size:0.62rem; color:var(--muted); text-transform:uppercase; letter-spacing:0.07em; margin-bottom:5px; }
+.modal-row input { width:100%; background:var(--surface2); border:1px solid var(--border); border-radius:7px; color:var(--text); font-size:0.9rem; padding:8px 10px; -webkit-appearance:none; }
+.modal-btns { display:flex; gap:8px; margin-top:16px; }
+.modal-confirm { flex:1; padding:10px; background:var(--accent); color:#fff; border:none; border-radius:8px; font-weight:700; font-size:0.85rem; cursor:pointer; -webkit-appearance:none; }
+.modal-cancel  { flex:1; padding:10px; background:none; color:var(--muted); border:1px solid var(--border); border-radius:8px; font-size:0.85rem; cursor:pointer; -webkit-appearance:none; }
+</style>
+</head>
+<body>
+
+<div class="app-header">
+  <div class="header-top">
+    <div class="header-art" id="art-left"></div>
+    <div class="header-title">
+      <h1>BenMed</h1>
+      <div class="sub">Post-surgery log</div>
+    </div>
+    <div class="header-art" id="art-right"></div>
+  </div>
+  <div id="clock">--:--</div>
+</div>
+
+<div class="warn-box">&#9888; Follow prescriber instructions. Don't combine Codeine + Oramorph without advice. Avoid Naproxen + Ibuprofen together.</div>
+
+<div class="sec-title">Summary</div>
+<div class="summary-wrap">
+  <div class="sum-head">
+    <div class="sum-hcell sum-col1">Drug</div>
+    <div class="sum-hcell sum-col2">Last taken</div>
+    <div class="sum-hcell sum-col3">Next due</div>
+    <div class="sum-hcell sum-col4">Hrs to go</div>
+  </div>
+  <div id="summary"></div>
+</div>
+
+<div class="sec-title">Pain level</div>
+<div class="pain-card">
+  <div class="pain-head">
+    <div class="pain-head-title">Ben's current pain</div>
+    <div class="pain-last" id="pain-last-label">Not logged yet</div>
+  </div>
+  <div class="pain-btns" id="pain-btns"></div>
+</div>
+
+<div class="sec-title">Pain over time</div>
+<div class="graph-wrap">
+  <div class="graph-head">
+    <div class="graph-head-title">2hr chunks</div>
+    <div class="graph-day-nav">
+      <button class="day-nav-btn" onclick="graphDayOffset--; renderGraph()">&#8249;</button>
+      <div class="day-nav-label" id="graph-day-label">Today</div>
+      <button class="day-nav-btn" onclick="graphDayOffset++; if(graphDayOffset>0) graphDayOffset=0; renderGraph()">&#8250;</button>
+    </div>
+  </div>
+  <div class="graph-daily-avg">
+    <div class="daily-avg-label">Daily average</div>
+    <div class="daily-avg-val avg-none" id="graph-daily-avg">—</div>
+  </div>
+  <div class="graph-body">
+    <canvas id="pain-graph" height="140"></canvas>
+  </div>
+</div>
+
+<div class="sec-title">Medications</div>
+<div id="med-list"></div>
+
+<div class="sec-title">Recent doses &amp; pain</div>
+<div class="hist-wrap">
+  <div id="hist-list" class="hist-list"></div>
+  <button class="clear-btn" onclick="clearAll()">Clear all history</button>
+</div>
+
+<!-- Modal -->
+<div class="modal-overlay" id="modal-overlay">
+  <div class="modal">
+    <div class="modal-title" id="modal-title">Log dose</div>
+    <div class="modal-sub" id="modal-sub"></div>
+    <div class="modal-row">
+      <label>Date</label>
+      <input type="date" id="modal-date">
+    </div>
+    <div class="modal-row">
+      <label>Time</label>
+      <input type="time" id="modal-time">
+    </div>
+    <div class="modal-btns">
+      <button class="modal-cancel" onclick="closeModal()">Cancel</button>
+      <button class="modal-confirm" onclick="confirmModal()">Confirm</button>
+    </div>
+  </div>
+</div>
+
+<script>
+var MEDS_KEY  = 'mt_meds';
+var HIST_KEY  = 'mt_hist';
+var PAIN_KEY  = 'mt_pain';
+
+var DEFAULT_MEDS = [
+  { id:'oramorph',    name:'Oramorph',         dose:'10mg',   hrs:4, max:4 },
+  { id:'codeine',     name:'Codeine Phosphate', dose:'30mg',   hrs:4, max:4 },
+  { id:'paracetamol', name:'Paracetamol',       dose:'1000mg', hrs:4, max:4 },
+  { id:'naproxen',    name:'Naproxen',          dose:'500mg',  hrs:8, max:2 },
+  { id:'ibuprofen',   name:'Ibuprofen',         dose:'400mg',  hrs:6, max:3 }
+];
+
+var DAYS   = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+var MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+var meds, hist, pain, openSets;
+var modalMode = '', modalMedId = '', modalHistIdx = -1;
+
+function init() {
+  meds     = readMeds();
+  hist     = readHist();
+  pain     = readPain();
+  openSets = {};
+}
+
+function readMeds() {
+  try { var s = localStorage.getItem(MEDS_KEY); if (s) { var p = JSON.parse(s); if (p && p.length) return p; } } catch(e) {}
+  return copyDefault();
+}
+function copyDefault() {
+  var out = [];
+  for (var i = 0; i < DEFAULT_MEDS.length; i++) { var m = DEFAULT_MEDS[i]; out.push({ id:m.id, name:m.name, dose:m.dose, hrs:m.hrs, max:m.max }); }
+  return out;
+}
+function writeMeds() { try { localStorage.setItem(MEDS_KEY, JSON.stringify(meds)); } catch(e) {} }
+function readHist() {
+  try { var s = localStorage.getItem(HIST_KEY); if (s) { var p = JSON.parse(s); if (p && p.length) return p; } } catch(e) {}
+  return [];
+}
+function writeHist() { try { localStorage.setItem(HIST_KEY, JSON.stringify(hist)); } catch(e) {} }
+function readPain() {
+  try { var s = localStorage.getItem(PAIN_KEY); if (s) { var p = JSON.parse(s); if (p && p.length) return p; } } catch(e) {}
+  return [];
+}
+function writePain() { try { localStorage.setItem(PAIN_KEY, JSON.stringify(pain)); } catch(e) {} }
+
+function pad(n) { return n < 10 ? '0' + n : '' + n; }
+function fmtTime(ts) { var d = new Date(ts); return pad(d.getHours()) + ':' + pad(d.getMinutes()); }
+function fmtDate(ts) { var d = new Date(ts); return d.getFullYear() + '-' + pad(d.getMonth()+1) + '-' + pad(d.getDate()); }
+function fmtDateTime(ts) { var d = new Date(ts); return DAYS[d.getDay()] + ' ' + pad(d.getHours()) + ':' + pad(d.getMinutes()); }
+function fmtAgo(ts) {
+  var diff = Math.round((Date.now() - ts) / 60000);
+  if (diff < 1) return 'just now';
+  if (diff < 60) return diff + 'm ago';
+  var h = Math.floor(diff / 60); var m = diff % 60;
+  return h + 'h' + (m ? ' ' + m + 'm' : '') + ' ago';
+}
+function fmtCountdown(ts) {
+  var diff = ts - Date.now();
+  if (diff <= 0) return 'now';
+  var mins = Math.ceil(diff / 60000);
+  if (mins < 60) return 'in ' + mins + 'm';
+  var h = Math.floor(mins / 60); var m = mins % 60;
+  return 'in ' + h + 'h' + (m ? ' ' + m + 'm' : '');
+}
+function hrsToGo(ts) {
+  var diff = ts - Date.now();
+  if (diff <= 0) return 'Now';
+  var h = Math.floor(diff / 3600000); var m = Math.ceil((diff % 3600000) / 60000);
+  return h === 0 ? m + 'm' : h + 'h ' + (m > 0 ? m + 'm' : '');
+}
+function midnightToday() { var n = new Date(); return new Date(n.getFullYear(), n.getMonth(), n.getDate()).getTime(); }
+function todayCount(medId) {
+  var mn = midnightToday(); var c = 0;
+  for (var i = 0; i < hist.length; i++) { if (hist[i].medId === medId && hist[i].ts >= mn) c++; }
+  return c;
+}
+function lastTaken(medId) {
+  var best = null;
+  for (var i = 0; i < hist.length; i++) { if (hist[i].medId === medId && (!best || hist[i].ts > best.ts)) best = hist[i]; }
+  return best;
+}
+function nextTs(med) { var last = lastTaken(med.id); return last ? last.ts + med.hrs * 3600000 : null; }
+function medStatus(med) {
+  if (todayCount(med.id) >= med.max) return 'exhausted';
+  var nt = nextTs(med); if (nt && Date.now() < nt) return 'waiting';
+  return 'ready';
+}
+function findMed(id) { for (var i = 0; i < meds.length; i++) { if (meds[i].id === id) return meds[i]; } return null; }
+
+// Pain logging
+function logPain(score) {
+  pain.push({ score: score, ts: Date.now() });
+  writePain();
+  render();
+}
+function delPain(idx) {
+  pain.splice(idx, 1);
+  writePain();
+  render();
+}
+
+// Modal
+function tsFromInputs() {
+  var dv = document.getElementById('modal-date').value;
+  var tv = document.getElementById('modal-time').value;
+  if (!dv || !tv) return Date.now();
+  var dp = dv.split('-'); var tp = tv.split(':');
+  return new Date(parseInt(dp[0],10), parseInt(dp[1],10)-1, parseInt(dp[2],10), parseInt(tp[0],10), parseInt(tp[1],10), 0, 0).getTime();
+}
+function setModalInputs(ts) {
+  document.getElementById('modal-date').value = fmtDate(ts);
+  document.getElementById('modal-time').value = fmtTime(ts);
+}
+function setElText(id, str) {
+  var e = document.getElementById(id); if (!e) return;
+  while (e.firstChild) e.removeChild(e.firstChild);
+  e.appendChild(document.createTextNode('' + str));
+}
+function openLogModal(medId) {
+  var med = findMed(medId); if (!med) return;
+  modalMode = 'log'; modalMedId = medId; modalHistIdx = -1;
+  setElText('modal-title', 'Log dose');
+  setElText('modal-sub', med.name + ' \u2014 ' + med.dose);
+  setModalInputs(Date.now());
+  document.getElementById('modal-overlay').className = 'modal-overlay show';
+}
+function openEditModal(idx) {
+  var h = hist[idx]; if (!h) return;
+  var med = findMed(h.medId);
+  modalMode = 'edit'; modalMedId = h.medId; modalHistIdx = idx;
+  setElText('modal-title', 'Edit time');
+  setElText('modal-sub', med ? med.name : h.medId);
+  setModalInputs(h.ts);
+  document.getElementById('modal-overlay').className = 'modal-overlay show';
+}
+function closeModal() { document.getElementById('modal-overlay').className = 'modal-overlay'; }
+function confirmModal() {
+  var ts = tsFromInputs();
+  if (modalMode === 'log') { hist.push({ medId: modalMedId, ts: ts }); }
+  else if (modalMode === 'edit' && modalHistIdx >= 0) { hist[modalHistIdx].ts = ts; }
+  writeHist(); closeModal(); render();
+}
+function delDose(idx) { hist.splice(idx, 1); writeHist(); render(); }
+function clearAll() {
+  if (!confirm('Clear all history including pain log?')) return;
+  hist = []; pain = []; writeHist(); writePain(); render();
+}
+function toggleSet(medId) { openSets[medId] = !openSets[medId]; render(); }
+function saveSet(medId) {
+  var med = findMed(medId); if (!med) return;
+  var hEl = document.getElementById('si-'+medId);
+  var mEl = document.getElementById('sm-'+medId);
+  var dEl = document.getElementById('sd-'+medId);
+  if (!hEl || !mEl || !dEl) return;
+  var hv = parseFloat(hEl.value); var mv = parseInt(mEl.value,10); var dv = dEl.value;
+  if (hv > 0) med.hrs = hv;
+  if (mv > 0) med.max = mv;
+  if (dv) med.dose = dv;
+  writeMeds(); openSets[medId] = false; render();
+}
+
+function el(tag, cls) { var e = document.createElement(tag); if (cls) e.className = cls; return e; }
+function txt(str) { return document.createTextNode('' + str); }
+
+function painColour(score) {
+  if (score <= 3) return '#0a7c4e';
+  if (score <= 6) return '#b36b00';
+  return '#8b0000';
+}
+
+// ── Render pain buttons ──────────────────────────────────────────────────
+function renderPainBtns() {
+  var container = document.getElementById('pain-btns');
+  while (container.firstChild) container.removeChild(container.firstChild);
+  for (var i = 1; i <= 10; i++) {
+    var cls = 'pain-btn';
+    if (i <= 3) cls += ' p-low';
+    else if (i <= 6) cls += ' p-mid';
+    else cls += ' p-high';
+    var b = el('button', cls);
+    b.appendChild(txt('' + i));
+    (function(score) { b.onclick = function() { logPain(score); }; })(i);
+    container.appendChild(b);
+  }
+  // Update last pain label with colour dot
+  var lastP = null;
+  for (var j = 0; j < pain.length; j++) { if (!lastP || pain[j].ts > lastP.ts) lastP = pain[j]; }
+  var labelEl = document.getElementById('pain-last-label');
+  if (labelEl) {
+    while (labelEl.firstChild) labelEl.removeChild(labelEl.firstChild);
+    if (lastP) {
+      var dot = el('span');
+      dot.style.cssText = 'display:inline-block;width:8px;height:8px;border-radius:50%;background:' + painColour(lastP.score) + ';margin-right:5px;vertical-align:middle';
+      var scoreSpan = el('span');
+      scoreSpan.style.color = painColour(lastP.score);
+      scoreSpan.style.fontWeight = '700';
+      scoreSpan.appendChild(txt(lastP.score + '/10'));
+      var restSpan = el('span');
+      restSpan.appendChild(txt(' \u00b7 ' + fmtAgo(lastP.ts)));
+      labelEl.appendChild(dot);
+      labelEl.appendChild(scoreSpan);
+      labelEl.appendChild(restSpan);
+    } else {
+      labelEl.appendChild(txt('Not logged yet'));
+    }
+  }
+}
+
+// ── Pain graph ───────────────────────────────────────────────────────────
+var graphDayOffset = 0; // 0=today, -1=yesterday etc
+
+function renderGraph() {
+  var canvas = document.getElementById('pain-graph');
+  if (!canvas || !canvas.getContext) return;
+
+  canvas.width = canvas.offsetWidth || 300;
+  var W = canvas.width;
+  var H = 140;
+  var ctx = canvas.getContext('2d');
+  ctx.clearRect(0, 0, W, H);
+
+  // Work out which day we're showing
+  var now = new Date();
+  var dayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate() + graphDayOffset).getTime();
+  var dayEnd   = dayStart + 86400000;
+
+  // Update nav label
+  var labelEl = document.getElementById('graph-day-label');
+  if (labelEl) {
+    var labelStr;
+    if (graphDayOffset === 0) labelStr = 'Today';
+    else if (graphDayOffset === -1) labelStr = 'Yesterday';
+    else {
+      var ld = new Date(dayStart);
+      labelStr = DAYS[ld.getDay()] + ' ' + ld.getDate() + ' ' + MONTHS[ld.getMonth()];
+    }
+    while (labelEl.firstChild) labelEl.removeChild(labelEl.firstChild);
+    labelEl.appendChild(document.createTextNode(labelStr));
+  }
+
+  // Build 12 x 2hr buckets for the day
+  var BUCKETS = 12;
+  var buckets = [];
+  for (var b = 0; b < BUCKETS; b++) {
+    buckets.push({ sum: 0, count: 0 });
+  }
+
+  var dayPain = [];
+  for (var i = 0; i < pain.length; i++) {
+    if (pain[i].ts >= dayStart && pain[i].ts < dayEnd) {
+      dayPain.push(pain[i]);
+      var offsetMs = pain[i].ts - dayStart;
+      var bucketIdx = Math.floor(offsetMs / (7200000)); // 2hr = 7200000ms
+      if (bucketIdx >= BUCKETS) bucketIdx = BUCKETS - 1;
+      buckets[bucketIdx].sum += pain[i].score;
+      buckets[bucketIdx].count++;
+    }
+  }
+
+  // Daily average
+  var avgEl = document.getElementById('graph-daily-avg');
+  if (avgEl) {
+    var avgCls, avgStr;
+    if (dayPain.length === 0) {
+      avgStr = '\u2014'; avgCls = 'daily-avg-val avg-none';
+    } else {
+      var totalSum = 0;
+      for (var di = 0; di < dayPain.length; di++) totalSum += dayPain[di].score;
+      var avg = totalSum / dayPain.length;
+      avgStr = avg.toFixed(1) + '/10 (' + dayPain.length + ' reading' + (dayPain.length !== 1 ? 's' : '') + ')';
+      avgCls = avg <= 3 ? 'daily-avg-val avg-low' : avg <= 6 ? 'daily-avg-val avg-mid' : 'daily-avg-val avg-high';
+    }
+    avgEl.className = avgCls;
+    while (avgEl.firstChild) avgEl.removeChild(avgEl.firstChild);
+    avgEl.appendChild(document.createTextNode(avgStr));
+  }
+
+  var PAD_L = 22; var PAD_R = 6; var PAD_T = 18; var PAD_B = 22;
+  var gW = W - PAD_L - PAD_R;
+  var gH = H - PAD_T - PAD_B;
+
+  // Y gridlines at 2,4,6,8,10
+  ctx.strokeStyle = '#e0eaf2';
+  ctx.lineWidth = 0.5;
+  ctx.fillStyle = '#5a7a90';
+  ctx.font = '9px -apple-system,Helvetica,Arial,sans-serif';
+  ctx.textAlign = 'right';
+  var gridVals = [2, 4, 6, 8, 10];
+  for (var g = 0; g < gridVals.length; g++) {
+    var gy = PAD_T + gH - ((gridVals[g] - 1) / 9) * gH;
+    ctx.beginPath(); ctx.moveTo(PAD_L, gy); ctx.lineTo(PAD_L + gW, gy); ctx.stroke();
+    ctx.fillText('' + gridVals[g], PAD_L - 3, gy + 3);
+  }
+
+  // Baseline
+  ctx.strokeStyle = '#c8d8e8';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(PAD_L, PAD_T + gH);
+  ctx.lineTo(PAD_L + gW, PAD_T + gH);
+  ctx.stroke();
+
+  var barW = gW / BUCKETS;
+  var barGap = Math.max(1, barW * 0.12);
+
+  for (var bk = 0; bk < BUCKETS; bk++) {
+    var bx = PAD_L + bk * barW;
+    var bucket = buckets[bk];
+
+    // X label: hour
+    var hourLabel = pad(bk * 2);
+    ctx.fillStyle = '#5a7a90';
+    ctx.font = '8px -apple-system,Helvetica,Arial,sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(hourLabel, bx + barW / 2, H - 5);
+
+    if (bucket.count === 0) continue;
+
+    var avg2 = bucket.sum / bucket.count;
+    var barH = ((avg2 - 1) / 9) * gH;
+    var by = PAD_T + gH - barH;
+
+    // Bar colour by avg score
+    var barCol;
+    if (avg2 <= 3)      barCol = '#3dba7a';
+    else if (avg2 <= 6) barCol = '#e0a020';
+    else                barCol = '#d94040';
+
+    ctx.fillStyle = barCol;
+    ctx.fillRect(bx + barGap, by, barW - barGap * 2, barH);
+
+    // Count label above bar
+    ctx.fillStyle = '#0f2030';
+    ctx.font = 'bold 8px -apple-system,Helvetica,Arial,sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('n' + bucket.count, bx + barW / 2, by - 4);
+
+    // Avg value inside bar if tall enough
+    if (barH > 16) {
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 9px -apple-system,Helvetica,Arial,sans-serif';
+      ctx.fillText(avg2.toFixed(1), bx + barW / 2, by + barH / 2 + 4);
+    }
+  }
+}
+
+// ── Render summary ───────────────────────────────────────────────────────
+function renderSummary() {
+  var container = document.getElementById('summary');
+  while (container.firstChild) container.removeChild(container.firstChild);
+  for (var i = 0; i < meds.length; i++) {
+    var med = meds[i]; var last = lastTaken(med.id);
+    var st = medStatus(med); var nt = nextTs(med);
+    var row = el('div', 'sum-row');
+    var c1 = el('div', 'sum-c1'); c1.appendChild(txt(med.name)); row.appendChild(c1);
+    var c2 = el('div', 'sum-c2'); c2.appendChild(txt(last ? fmtDateTime(last.ts) : '\u2014')); row.appendChild(c2);
+    var c3 = el('div', 'sum-c3');
+    var nd, nc;
+    if (st === 'exhausted')          { nd = 'Done today'; nc = 'sum-c3 col-danger'; }
+    else if (st === 'waiting' && nt) { nd = fmtTime(nt);  nc = 'sum-c3 col-warn'; }
+    else if (st === 'ready' && last) { nd = 'Now';        nc = 'sum-c3 col-ok'; }
+    else                             { nd = '\u2014';     nc = 'sum-c3 col-muted'; }
+    c3.className = nc; c3.appendChild(txt(nd)); row.appendChild(c3);
+    var c4 = el('div', 'sum-c4');
+    var hd, hc;
+    if (st === 'exhausted')          { hd = '\u2014';     hc = 'sum-c4 col-danger'; }
+    else if (st === 'waiting' && nt) { hd = hrsToGo(nt);  hc = 'sum-c4 col-warn'; }
+    else if (st === 'ready' && last) { hd = 'Ready';      hc = 'sum-c4 col-ok'; }
+    else                             { hd = '\u2014';     hc = 'sum-c4 col-muted'; }
+    c4.className = hc; c4.appendChild(txt(hd)); row.appendChild(c4);
+    container.appendChild(row);
+  }
+}
+
+// ── Render meds ──────────────────────────────────────────────────────────
+function renderMeds() {
+  var container = document.getElementById('med-list');
+  while (container.firstChild) container.removeChild(container.firstChild);
+  for (var i = 0; i < meds.length; i++) {
+    var med = meds[i]; var st = medStatus(med); var last = lastTaken(med.id);
+    var nt = nextTs(med); var tc = todayCount(med.id); var rem = med.max - tc;
+    var isLast = (tc === med.max - 1); var sOpen = openSets[med.id];
+    var card = el('div', 'card ' + st);
+    var head = el('div', 'card-head');
+    var nameEl = el('span', 'med-name'); nameEl.appendChild(txt(med.name));
+    var bc, bt;
+    if (st==='exhausted') { bc='badge b-done'; bt='Done today'; }
+    else if (st==='waiting') { bc='badge b-wait'; bt='Wait'; }
+    else if (last) { bc='badge b-ok'; bt='Ready'; }
+    else { bc='badge b-none'; bt='Not taken'; }
+    var badge = el('span', bc); badge.appendChild(txt(bt));
+    head.appendChild(nameEl); head.appendChild(badge); card.appendChild(head);
+    var body = el('div', 'card-body');
+    var stats = el('div', 'stats');
+    var lastStr = last ? fmtAgo(last.ts)+' ('+fmtTime(last.ts)+')' : '\u2014';
+    var nextStr = (st==='waiting'&&nt) ? fmtTime(nt)+' ('+fmtCountdown(nt)+')' : (st==='ready'&&last ? 'Now' : '\u2014');
+    var remStr = rem+' of '+med.max+' left';
+    var remCls = 'sval'+(rem===0?' red':rem===1?' warn':' ok');
+    var statDefs = [
+      {label:'Last taken', val:lastStr, cls:'sval hi'},
+      {label:'Next available', val:nextStr, cls:'sval'},
+      {label:'Doses today', val:remStr, cls:remCls},
+      {label:'Interval/Dose', val:med.hrs+'h / '+med.dose, cls:'sval'}
+    ];
+    for (var s = 0; s < statDefs.length; s++) {
+      var sd = statDefs[s]; var box = el('div','stat');
+      var lbl = el('div','slabel'); lbl.appendChild(txt(sd.label));
+      var val = el('div',sd.cls); val.appendChild(txt(sd.val));
+      box.appendChild(lbl); box.appendChild(val); stats.appendChild(box);
+    }
+    body.appendChild(stats);
+    var btnTxt, btnCls; var disabled = false;
+    if (st==='exhausted')   { btnTxt='Max doses reached today'; btnCls='btn btn-done'; disabled=true; }
+    else if (st==='waiting'){ btnTxt='Next dose '+fmtCountdown(nt); btnCls='btn btn-wait'; disabled=true; }
+    else if (isLast)        { btnTxt='Log dose \u2014 '+med.dose+' (last today)'; btnCls='btn btn-last'; }
+    else                    { btnTxt='Log dose \u2014 '+med.dose; btnCls='btn btn-go'; }
+    var btn = el('button', btnCls); btn.appendChild(txt(btnTxt));
+    if (disabled) btn.disabled = true;
+    (function(id) { btn.onclick = function() { openLogModal(id); }; })(med.id);
+    body.appendChild(btn);
+    var setToggle = el('div','set-toggle');
+    var setLbl = el('span'); setLbl.appendChild(txt('Settings'));
+    var setArr = el('span'); setArr.appendChild(txt(sOpen?'\u25b2':'\u25bc'));
+    setToggle.appendChild(setLbl); setToggle.appendChild(setArr);
+    (function(id) { setToggle.onclick = function() { toggleSet(id); }; })(med.id);
+    body.appendChild(setToggle);
+    var panel = el('div', 'set-panel'+(sOpen?' open':''));
+    var fields = [
+      {id:'sd-'+med.id, label:'Dose label',    type:'text',   val:med.dose, step:null, min:null},
+      {id:'si-'+med.id, label:'Interval (hrs)', type:'number', val:med.hrs,  step:'0.5', min:'1'},
+      {id:'sm-'+med.id, label:'Max per day',   type:'number', val:med.max,  step:'1',   min:'1'}
+    ];
+    for (var f = 0; f < fields.length; f++) {
+      var fd = fields[f]; var row2 = el('div','set-row');
+      var rowLbl = el('label'); rowLbl.appendChild(txt(fd.label));
+      var inp = el('input'); inp.id=fd.id; inp.type=fd.type; inp.value=fd.val;
+      if (fd.step) inp.step=fd.step; if (fd.min) inp.setAttribute('min',fd.min);
+      row2.appendChild(rowLbl); row2.appendChild(inp); panel.appendChild(row2);
+    }
+    var savBtn = el('button','save-btn'); savBtn.appendChild(txt('Save'));
+    (function(id) { savBtn.onclick = function() { saveSet(id); }; })(med.id);
+    panel.appendChild(savBtn); body.appendChild(panel); card.appendChild(body); container.appendChild(card);
+  }
+}
+
+// ── Render history (doses + pain combined) ───────────────────────────────
+function renderHist() {
+  var container = document.getElementById('hist-list');
+  while (container.firstChild) container.removeChild(container.firstChild);
+
+  // Merge doses and pain into one list with type tag
+  var combined = [];
+  for (var i = 0; i < hist.length; i++) { combined.push({ type:'med', idx:i, ts:hist[i].ts }); }
+  for (var j = 0; j < pain.length; j++) { combined.push({ type:'pain', idx:j, ts:pain[j].ts }); }
+  combined.sort(function(a,b) { return b.ts - a.ts; });
+
+  if (!combined.length) {
+    var em = el('div','empty'); em.appendChild(txt('No history yet')); container.appendChild(em); return;
+  }
+
+  var shown = combined.length < 30 ? combined.length : 30;
+  for (var k = 0; k < shown; k++) {
+    var entry = combined[k];
+    var d = new Date(entry.ts);
+    var dateStr = DAYS[d.getDay()]+' '+d.getDate()+' '+MONTHS[d.getMonth()];
+    var item = el('div','hist-item');
+    var info = el('div','hist-info');
+
+    if (entry.type === 'med') {
+      var h = hist[entry.idx];
+      var med = findMed(h.medId);
+      var name = el('div','hist-name is-med'); name.appendChild(txt(med ? med.name : h.medId));
+      var time = el('div','hist-time'); time.appendChild(txt(dateStr+' \u00b7 '+fmtTime(h.ts)+' \u00b7 '+fmtAgo(h.ts)));
+      info.appendChild(name); info.appendChild(time);
+      var actions = el('div','hist-actions');
+      var editBtn = el('button','edit-btn'); editBtn.appendChild(txt('\u270e'));
+      (function(i) { editBtn.onclick = function() { openEditModal(i); }; })(entry.idx);
+      var delBtn = el('button','del-btn'); delBtn.appendChild(txt('\u2715'));
+      (function(i) { delBtn.onclick = function() { delDose(i); }; })(entry.idx);
+      actions.appendChild(editBtn); actions.appendChild(delBtn);
+      item.appendChild(info); item.appendChild(actions);
+    } else {
+      var p = pain[entry.idx];
+      var pname = el('div','hist-name');
+      var pdot = el('span');
+      pdot.style.cssText = 'display:inline-block;width:8px;height:8px;border-radius:50%;background:'+painColour(p.score)+';margin-right:5px;vertical-align:middle';
+      var pscore = el('span');
+      pscore.style.color = painColour(p.score);
+      pscore.style.fontWeight = '700';
+      pscore.appendChild(txt('Pain: ' + p.score + '/10'));
+      pname.appendChild(pdot);
+      pname.appendChild(pscore);
+      var ptime = el('div','hist-time'); ptime.appendChild(txt(dateStr+' \u00b7 '+fmtTime(p.ts)+' \u00b7 '+fmtAgo(p.ts)));
+      info.appendChild(pname); info.appendChild(ptime);
+      var pactions = el('div','hist-actions');
+      var pdelBtn = el('button','del-btn'); pdelBtn.appendChild(txt('\u2715'));
+      (function(i) { pdelBtn.onclick = function() { delPain(i); }; })(entry.idx);
+      pactions.appendChild(pdelBtn);
+      item.appendChild(info); item.appendChild(pactions);
+    }
+    container.appendChild(item);
+  }
+}
+
+function render() { renderSummary(); renderPainBtns(); renderGraph(); renderMeds(); renderHist(); }
+function updateClock() { setElText('clock', pad(new Date().getHours())+':'+pad(new Date().getMinutes())); }
+
+// ── Pixel art ────────────────────────────────────────────────────────────
+function drawPx(canvas, grid, colors) {
+  var ctx = canvas.getContext('2d'); var ps = 2;
+  for (var r = 0; r < grid.length; r++) {
+    for (var c = 0; c < grid[r].length; c++) {
+      var v = grid[r][c]; if (!v) continue;
+      ctx.fillStyle = colors[v-1];
+      ctx.fillRect(c*ps, r*ps, ps, ps);
+    }
+  }
+}
+
+function drawPixelArt() {
+  var nurseEl = document.getElementById('px-nurse');
+  if (nurseEl && nurseEl.getContext) {
+    drawPx(nurseEl, [
+      [0,0,0,0,0,4,4,4,4,4,0,0,0,0],
+      [0,0,0,0,4,4,4,4,4,4,4,0,0,0],
+      [0,0,0,0,4,1,1,1,1,4,4,0,0,0],
+      [0,0,0,0,2,1,1,1,1,2,4,0,0,0],
+      [0,0,0,0,2,1,1,1,1,2,0,0,0,0],
+      [0,0,0,0,2,2,5,2,2,2,0,0,0,0],
+      [0,0,0,0,2,2,2,2,2,2,0,0,0,0],
+      [0,0,0,3,3,2,2,2,3,3,0,0,0,0],
+      [0,0,0,3,3,3,3,3,3,3,0,0,0,0],
+      [0,0,0,3,3,3,3,3,3,3,0,0,0,0],
+      [0,0,1,3,3,3,3,3,3,3,1,0,0,0],
+      [0,0,1,1,3,3,3,3,3,1,1,0,0,0],
+      [0,0,0,1,1,3,3,3,1,1,0,0,0,0],
+      [0,0,0,0,3,3,3,3,3,0,0,0,0,0],
+      [0,0,0,0,3,3,0,3,3,0,0,0,0,0],
+      [0,0,0,0,3,3,0,3,3,0,0,0,0,0],
+      [0,0,0,0,3,0,0,0,3,0,0,0,0,0],
+      [0,0,0,6,6,0,0,0,6,6,0,0,0,0],
+      [0,0,0,6,6,0,0,0,6,6,0,0,0,0],
+      [0,0,0,6,6,0,0,0,6,6,0,0,0,0]
+    ], ['#f4c07a','#ffffff','#008b8b','#4a3000','#cc2222','#1a1a2e']);
+  }
+  var ankleEl = document.getElementById('px-ankle');
+  if (ankleEl && ankleEl.getContext) {
+    drawPx(ankleEl, [
+      [0,0,0,3,3,3,3,3,3,0,0,0],
+      [0,0,3,2,2,2,2,2,2,3,0,0],
+      [0,0,3,2,2,2,2,2,2,3,0,0],
+      [0,0,3,2,2,2,2,2,2,3,0,0],
+      [0,0,3,3,3,3,3,3,3,3,0,0],
+      [0,1,1,1,1,1,1,1,1,1,0,0],
+      [0,1,1,1,1,1,1,1,1,1,4,0],
+      [0,1,1,1,1,1,1,1,1,4,0,0],
+      [1,1,1,1,1,1,1,1,1,0,0,0],
+      [1,1,1,1,1,1,1,1,4,0,0,0],
+      [1,1,4,1,1,1,1,4,0,0,0,0],
+      [0,1,1,1,1,1,1,0,0,0,0,0],
+      [0,0,1,1,1,1,4,0,0,0,0,0],
+      [0,0,0,4,4,0,0,0,0,0,0,0]
+    ], ['#f4c07a','#ffffff','#b8d0e8','#d4956a']);
+  }
+  var hospEl = document.getElementById('px-hosp');
+  if (hospEl && hospEl.getContext) {
+    drawPx(hospEl, [
+      [0,0,0,0,2,2,2,2,2,2,2,2,0,0,0,0],
+      [0,0,0,2,2,2,2,2,2,2,2,2,2,0,0,0],
+      [0,0,0,1,1,5,5,5,5,5,1,1,1,0,0,0],
+      [0,0,0,1,1,5,6,5,5,5,1,1,1,0,0,0],
+      [0,2,2,1,1,5,5,5,5,5,1,1,1,2,2,0],
+      [2,2,2,1,1,1,1,1,1,1,1,1,1,2,2,2],
+      [1,1,1,1,3,3,1,1,1,3,3,1,1,1,1,1],
+      [1,1,1,1,3,3,1,1,1,3,3,1,1,1,1,1],
+      [1,1,1,1,3,3,1,4,1,3,3,1,1,1,1,1],
+      [1,1,1,1,1,1,1,4,1,1,1,1,1,1,1,1],
+      [1,1,1,1,1,1,1,4,1,1,1,1,1,1,1,1],
+      [1,1,1,1,1,1,1,4,1,1,1,1,1,1,1,1],
+      [2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2],
+      [2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2]
+    ], ['#d0e8f0','#0a3d5c','#7fd8ff','#5a3010','#cc2222','#ffffff']);
+  }
+}
+
+function buildHeader() {
+  var left = document.getElementById('art-left');
+  var right = document.getElementById('art-right');
+  var nurse = document.createElement('canvas'); nurse.id='px-nurse'; nurse.width=28; nurse.height=40;
+  nurse.style.cssText='width:28px;height:40px;image-rendering:pixelated';
+  left.appendChild(nurse);
+  var ankle = document.createElement('canvas'); ankle.id='px-ankle'; ankle.width=24; ankle.height=28;
+  ankle.style.cssText='width:24px;height:28px;image-rendering:pixelated';
+  left.appendChild(ankle);
+  var hosp = document.createElement('canvas'); hosp.id='px-hosp'; hosp.width=32; hosp.height=28;
+  hosp.style.cssText='width:32px;height:28px;image-rendering:pixelated';
+  right.appendChild(hosp);
+}
+
+buildHeader();
+init();
+drawPixelArt();
+render();
+updateClock();
+setInterval(updateClock, 10000);
+setInterval(render, 30000);
+</script>
+</body>
+</html>
