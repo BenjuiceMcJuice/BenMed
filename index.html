@@ -51,19 +51,25 @@ body { background:var(--bg); color:var(--text); font-family:-apple-system,Helvet
 
 /* Summary table */
 .summary-wrap { margin:0 14px 14px; background:var(--surface); border:1px solid var(--border); border-radius:10px; overflow:hidden; }
-.sum-head { display:flex; background:var(--head-bg); padding:6px 10px; }
-.sum-hcell { font-size:0.58rem; font-weight:700; color:#90bcd8; text-transform:uppercase; letter-spacing:0.08em; }
-.sum-col1 { width:30%; flex-shrink:0; }
-.sum-col2 { width:26%; flex-shrink:0; }
-.sum-col3 { width:26%; flex-shrink:0; }
-.sum-col4 { width:18%; flex-shrink:0; text-align:right; }
-.sum-row { display:flex; align-items:center; padding:7px 10px; border-bottom:1px solid var(--border); }
+.sum-head { display:flex; background:var(--head-bg); padding:8px 10px; }
+.sum-hcell { font-size:0.62rem; font-weight:700; color:#90bcd8; text-transform:uppercase; letter-spacing:0.08em; }
+.sum-col1 { width:26%; flex-shrink:0; }
+.sum-col2 { width:22%; flex-shrink:0; }
+.sum-col3 { width:30%; flex-shrink:0; }
+.sum-col4 { width:22%; flex-shrink:0; text-align:right; }
+.sum-row { display:flex; align-items:center; padding:10px 10px; border-bottom:1px solid var(--border); }
 .sum-row:last-child { border-bottom:none; }
 .sum-row:nth-child(even) { background:var(--surface2); }
-.sum-c1 { width:30%; flex-shrink:0; font-size:0.72rem; font-weight:700; color:var(--text); }
-.sum-c2 { width:26%; flex-shrink:0; font-size:0.68rem; color:var(--muted); }
-.sum-c3 { width:26%; flex-shrink:0; font-size:0.68rem; font-weight:600; }
-.sum-c4 { width:18%; flex-shrink:0; font-size:0.68rem; font-weight:700; text-align:right; }
+.sum-c1 { width:26%; flex-shrink:0; font-size:0.82rem; font-weight:700; color:var(--text); line-height:1.3; }
+.sum-c1-sub { font-size:0.6rem; font-weight:400; color:var(--muted); }
+.sum-c2 { width:22%; flex-shrink:0; font-size:0.72rem; }
+.sum-c3 { width:30%; flex-shrink:0; font-size:0.72rem; font-weight:600; }
+.sum-c4 { width:22%; flex-shrink:0; text-align:right; }
+.sum-log-btn { padding:6px 10px; border-radius:6px; font-weight:700; font-size:0.68rem; cursor:pointer; border:none; -webkit-appearance:none; }
+.sum-log-btn.s-go { background:var(--accent); color:#fff; }
+.sum-log-btn.s-last { background:#b36b00; color:#fff; }
+.sum-log-btn.s-wait { background:var(--warn-bg); color:var(--warn); border:1px solid var(--warn-bd); }
+.sum-log-btn.s-done { background:var(--danger-bg); color:var(--danger); font-weight:600; font-size:0.6rem; }
 .col-ok     { color:var(--ok); }
 .col-warn   { color:#b36b00; }
 .col-danger { color:var(--danger); }
@@ -223,12 +229,15 @@ body { background:var(--bg); color:var(--text); font-family:-apple-system,Helvet
 <div class="summary-wrap">
   <div class="sum-head">
     <div class="sum-hcell sum-col1">Drug</div>
-    <div class="sum-hcell sum-col2">Last taken</div>
-    <div class="sum-hcell sum-col3">Next due</div>
-    <div class="sum-hcell sum-col4">Hrs to go</div>
+    <div class="sum-hcell sum-col2">Status</div>
+    <div class="sum-hcell sum-col3">Next / Countdown</div>
+    <div class="sum-hcell sum-col4"></div>
   </div>
   <div id="summary"></div>
 </div>
+
+<div class="sec-title">Medications</div>
+<div id="med-list"></div>
 
 <div class="sec-title">Pain level</div>
 <div class="pain-card">
@@ -257,9 +266,6 @@ body { background:var(--bg); color:var(--text); font-family:-apple-system,Helvet
     <canvas id="pain-graph" height="140"></canvas>
   </div>
 </div>
-
-<div class="sec-title">Medications</div>
-<div id="med-list"></div>
 
 <div class="sec-title">Recent doses &amp; pain</div>
 <div class="hist-wrap">
@@ -644,23 +650,55 @@ function renderSummary() {
   for (var i = 0; i < meds.length; i++) {
     var med = meds[i]; var last = lastTaken(med.id);
     var st = medStatus(med); var nt = nextTs(med);
+    var tc = todayCount(med.id); var rem = med.max - tc;
+    var isLast = (tc === med.max - 1);
     var row = el('div', 'sum-row');
-    var c1 = el('div', 'sum-c1'); c1.appendChild(txt(med.name)); row.appendChild(c1);
-    var c2 = el('div', 'sum-c2'); c2.appendChild(txt(last ? fmtDateTime(last.ts) : '\u2014')); row.appendChild(c2);
+
+    // Col 1: Drug name + dose/remaining
+    var c1 = el('div', 'sum-c1');
+    c1.appendChild(txt(med.name));
+    var sub = el('div', 'sum-c1-sub');
+    sub.appendChild(txt(med.dose + ' \u00b7 ' + rem + '/' + med.max + ' left'));
+    c1.appendChild(sub);
+    row.appendChild(c1);
+
+    // Col 2: Status badge
+    var c2 = el('div', 'sum-c2');
+    var bd, bc2;
+    if (st === 'exhausted')          { bd = 'Done'; bc2 = 'badge b-done'; }
+    else if (st === 'waiting')       { bd = 'Wait'; bc2 = 'badge b-wait'; }
+    else if (last)                   { bd = 'Ready'; bc2 = 'badge b-ok'; }
+    else                             { bd = 'None'; bc2 = 'badge b-none'; }
+    var badge2 = el('span', bc2); badge2.appendChild(txt(bd));
+    c2.appendChild(badge2);
+    row.appendChild(c2);
+
+    // Col 3: Next due / countdown
     var c3 = el('div', 'sum-c3');
     var nd, nc;
-    if (st === 'exhausted')          { nd = 'Done today'; nc = 'sum-c3 col-danger'; }
-    else if (st === 'waiting' && nt) { nd = fmtTime(nt);  nc = 'sum-c3 col-warn'; }
-    else if (st === 'ready' && last) { nd = 'Now';        nc = 'sum-c3 col-ok'; }
-    else                             { nd = '\u2014';     nc = 'sum-c3 col-muted'; }
+    if (st === 'exhausted')          { nd = 'Max reached'; nc = 'sum-c3 col-danger'; }
+    else if (st === 'waiting' && nt) { nd = fmtTime(nt) + ' (' + hrsToGo(nt) + ')'; nc = 'sum-c3 col-warn'; }
+    else if (st === 'ready' && last) { nd = 'Ready now';   nc = 'sum-c3 col-ok'; }
+    else                             { nd = 'Not taken';   nc = 'sum-c3 col-muted'; }
     c3.className = nc; c3.appendChild(txt(nd)); row.appendChild(c3);
+
+    // Col 4: Log button
     var c4 = el('div', 'sum-c4');
-    var hd, hc;
-    if (st === 'exhausted')          { hd = '\u2014';     hc = 'sum-c4 col-danger'; }
-    else if (st === 'waiting' && nt) { hd = hrsToGo(nt);  hc = 'sum-c4 col-warn'; }
-    else if (st === 'ready' && last) { hd = 'Ready';      hc = 'sum-c4 col-ok'; }
-    else                             { hd = '\u2014';     hc = 'sum-c4 col-muted'; }
-    c4.className = hc; c4.appendChild(txt(hd)); row.appendChild(c4);
+    var logBtn;
+    if (st === 'exhausted') {
+      logBtn = el('button', 'sum-log-btn s-done'); logBtn.appendChild(txt('Done')); logBtn.disabled = true;
+    } else if (st === 'waiting') {
+      logBtn = el('button', 'sum-log-btn s-wait'); logBtn.appendChild(txt(hrsToGo(nt))); logBtn.disabled = true;
+    } else if (isLast) {
+      logBtn = el('button', 'sum-log-btn s-last'); logBtn.appendChild(txt('Last dose'));
+      (function(id) { logBtn.onclick = function() { openLogModal(id); }; })(med.id);
+    } else {
+      logBtn = el('button', 'sum-log-btn s-go'); logBtn.appendChild(txt('Log dose'));
+      (function(id) { logBtn.onclick = function() { openLogModal(id); }; })(med.id);
+    }
+    c4.appendChild(logBtn);
+    row.appendChild(c4);
+
     container.appendChild(row);
   }
 }
