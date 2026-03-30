@@ -154,7 +154,24 @@ body { background:var(--bg); color:var(--text); font-family:-apple-system,Helvet
 .modal-btns { display:flex; gap:8px; margin-top:16px; }
 .modal-confirm { flex:1; padding:10px; background:var(--accent); color:#fff; border:none; border-radius:8px; font-weight:700; font-size:0.85rem; cursor:pointer; -webkit-appearance:none; }
 .modal-cancel  { flex:1; padding:10px; background:none; color:var(--muted); border:1px solid var(--border); border-radius:8px; font-size:0.85rem; cursor:pointer; -webkit-appearance:none; }
+/* Auth bar */
+.auth-bar { background:var(--surface); border-bottom:1px solid var(--border); padding:8px 14px; display:flex; align-items:center; justify-content:space-between; }
+.auth-bar.signed-out { justify-content:center; }
+.auth-user { display:flex; align-items:center; gap:8px; }
+.auth-avatar { width:28px; height:28px; border-radius:50%; border:2px solid var(--accent); }
+.auth-name { font-size:0.75rem; font-weight:600; color:var(--text); }
+.auth-btn { padding:7px 16px; border-radius:7px; font-weight:700; font-size:0.78rem; cursor:pointer; border:none; -webkit-appearance:none; }
+.auth-btn.sign-in { background:var(--accent); color:#fff; }
+.auth-btn.sign-out { background:none; color:var(--muted); border:1px solid var(--border); font-size:0.68rem; padding:5px 12px; }
+.sync-status { font-size:0.6rem; color:var(--muted); text-align:center; padding:2px 14px 6px; }
+.sync-status.synced { color:var(--ok); }
+.sync-status.error { color:var(--danger); }
 </style>
+
+<!-- Firebase SDK (compat for single-file use) -->
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 </head>
 <body>
 
@@ -169,6 +186,11 @@ body { background:var(--bg); color:var(--text); font-family:-apple-system,Helvet
   </div>
   <div id="clock">--:--</div>
 </div>
+
+<div class="auth-bar signed-out" id="auth-bar">
+  <button class="auth-btn sign-in" id="auth-signin" onclick="googleSignIn()">Sign in with Google</button>
+</div>
+<div class="sync-status" id="sync-status"></div>
 
 <div class="warn-box">&#9888; Follow prescriber instructions. Don't combine Codeine + Oramorph without advice. Avoid Naproxen + Ibuprofen together.</div>
 
@@ -840,6 +862,142 @@ function buildHeader() {
   hosp.style.cssText='width:32px;height:28px;image-rendering:pixelated';
   right.appendChild(hosp);
 }
+
+// ── Firebase ─────────────────────────────────────────────────────────────
+var firebaseConfig = {
+  apiKey: "AIzaSyB5ujrFZ8otPNAAiRwi9VN9nRXU4FYZKQ0",
+  authDomain: "benmed-52d2b.firebaseapp.com",
+  projectId: "benmed-52d2b",
+  storageBucket: "benmed-52d2b.firebasestorage.app",
+  messagingSenderId: "680628929866",
+  appId: "1:680628929866:web:62b7442cea94571f5cedb3",
+  measurementId: "G-W8FB1BK6EF"
+};
+firebase.initializeApp(firebaseConfig);
+var auth = firebase.auth();
+var db   = firebase.firestore();
+var currentUser = null;
+
+function setSyncStatus(msg, cls) {
+  var el2 = document.getElementById('sync-status');
+  if (!el2) return;
+  el2.className = 'sync-status' + (cls ? ' ' + cls : '');
+  while (el2.firstChild) el2.removeChild(el2.firstChild);
+  el2.appendChild(document.createTextNode(msg));
+}
+
+function googleSignIn() {
+  var provider = new firebase.auth.GoogleAuthProvider();
+  auth.signInWithPopup(provider).catch(function(err) {
+    console.error('Auth error:', err);
+    setSyncStatus('Sign-in failed: ' + err.message, 'error');
+  });
+}
+
+function signOut() {
+  auth.signOut();
+}
+
+function renderAuthBar(user) {
+  var bar = document.getElementById('auth-bar');
+  while (bar.firstChild) bar.removeChild(bar.firstChild);
+  if (user) {
+    bar.className = 'auth-bar';
+    var info = el('div', 'auth-user');
+    if (user.photoURL) {
+      var img = document.createElement('img');
+      img.className = 'auth-avatar';
+      img.src = user.photoURL;
+      img.referrerPolicy = 'no-referrer';
+      info.appendChild(img);
+    }
+    var name = el('span', 'auth-name');
+    name.appendChild(txt(user.displayName || user.email || 'Signed in'));
+    info.appendChild(name);
+    bar.appendChild(info);
+    var btn = el('button', 'auth-btn sign-out');
+    btn.appendChild(txt('Sign out'));
+    btn.onclick = signOut;
+    bar.appendChild(btn);
+  } else {
+    bar.className = 'auth-bar signed-out';
+    var signInBtn = el('button', 'auth-btn sign-in');
+    signInBtn.appendChild(txt('Sign in with Google'));
+    signInBtn.onclick = googleSignIn;
+    bar.appendChild(signInBtn);
+  }
+}
+
+// ── Firestore sync ───────────────────────────────────────────────────────
+var syncDebounce = null;
+
+function userDocRef() {
+  if (!currentUser) return null;
+  return db.collection('users').doc(currentUser.uid);
+}
+
+function syncToFirestore() {
+  if (!currentUser) return;
+  if (syncDebounce) clearTimeout(syncDebounce);
+  syncDebounce = setTimeout(function() {
+    var ref = userDocRef();
+    if (!ref) return;
+    setSyncStatus('Syncing...', '');
+    ref.set({
+      meds: JSON.parse(JSON.stringify(meds)),
+      hist: JSON.parse(JSON.stringify(hist)),
+      pain: JSON.parse(JSON.stringify(pain)),
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    }).then(function() {
+      setSyncStatus('Synced', 'synced');
+    }).catch(function(err) {
+      console.error('Sync error:', err);
+      setSyncStatus('Sync failed', 'error');
+    });
+  }, 800);
+}
+
+function loadFromFirestore() {
+  if (!currentUser) return;
+  var ref = userDocRef();
+  if (!ref) return;
+  setSyncStatus('Loading...', '');
+  ref.get().then(function(doc) {
+    if (doc.exists) {
+      var data = doc.data();
+      if (data.meds && data.meds.length) { meds = data.meds; writeMeds(); }
+      if (data.hist && data.hist.length) { hist = data.hist; writeHist(); }
+      if (data.pain && data.pain.length) { pain = data.pain; writePain(); }
+      render();
+      setSyncStatus('Loaded from cloud', 'synced');
+    } else {
+      // First sign-in: push local data up
+      syncToFirestore();
+      setSyncStatus('Uploaded local data', 'synced');
+    }
+  }).catch(function(err) {
+    console.error('Load error:', err);
+    setSyncStatus('Load failed — using local data', 'error');
+  });
+}
+
+// Patch write functions to also sync
+var _origWriteMeds = writeMeds;
+var _origWriteHist = writeHist;
+var _origWritePain = writePain;
+writeMeds = function() { _origWriteMeds(); syncToFirestore(); };
+writeHist = function() { _origWriteHist(); syncToFirestore(); };
+writePain = function() { _origWritePain(); syncToFirestore(); };
+
+auth.onAuthStateChanged(function(user) {
+  currentUser = user;
+  renderAuthBar(user);
+  if (user) {
+    loadFromFirestore();
+  } else {
+    setSyncStatus('', '');
+  }
+});
 
 buildHeader();
 init();
