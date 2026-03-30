@@ -173,6 +173,15 @@ body { background:var(--bg); color:var(--text); font-family:-apple-system,Helvet
 .sync-status { font-size:0.6rem; color:var(--muted); text-align:center; padding:2px 14px 6px; }
 .sync-status.synced { color:var(--ok); }
 .sync-status.error { color:var(--danger); }
+
+/* Login gate */
+.login-screen { display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:80vh; padding:40px 20px; text-align:center; }
+.login-screen h2 { color:var(--head-bg); font-size:1.8rem; font-weight:800; margin-bottom:4px; }
+.login-screen .login-sub { color:var(--muted); font-size:0.75rem; margin-bottom:30px; }
+.login-screen .auth-btn { padding:14px 32px; font-size:1rem; border-radius:10px; }
+.login-screen .login-icon { font-size:3rem; margin-bottom:16px; }
+.app-content { display:none; }
+.app-content.visible { display:block; }
 </style>
 
 <!-- Firebase SDK (compat for single-file use) -->
@@ -194,9 +203,17 @@ body { background:var(--bg); color:var(--text); font-family:-apple-system,Helvet
   <div id="clock">--:--</div>
 </div>
 
-<div class="auth-bar signed-out" id="auth-bar">
-  <button class="auth-btn sign-in" id="auth-signin" onclick="googleSignIn()">Sign in with Google</button>
+<!-- Login screen (shown when signed out) -->
+<div class="login-screen" id="login-screen">
+  <div class="login-icon">&#128138;</div>
+  <h2>BenMed</h2>
+  <div class="login-sub">Sign in to track your medications &amp; pain</div>
+  <button class="auth-btn sign-in" onclick="googleSignIn()">Sign in with Google</button>
 </div>
+
+<!-- App content (hidden until signed in) -->
+<div class="app-content" id="app-content">
+<div class="auth-bar" id="auth-bar"></div>
 <div class="sync-status" id="sync-status"></div>
 
 <div class="warn-box">&#9888; Follow prescriber instructions. Don't combine Codeine + Oramorph without advice. Avoid Naproxen + Ibuprofen together.</div>
@@ -248,6 +265,8 @@ body { background:var(--bg); color:var(--text); font-family:-apple-system,Helvet
   <div id="hist-list" class="hist-list"></div>
   <button class="clear-btn" onclick="clearAll()">Clear all history</button>
 </div>
+
+</div><!-- /app-content -->
 
 <!-- Modal -->
 <div class="modal-overlay" id="modal-overlay">
@@ -998,10 +1017,16 @@ writePain = function() { _origWritePain(); syncToFirestore(); };
 
 auth.onAuthStateChanged(function(user) {
   currentUser = user;
-  renderAuthBar(user);
+  var loginScreen = document.getElementById('login-screen');
+  var appContent = document.getElementById('app-content');
   if (user) {
+    loginScreen.style.display = 'none';
+    appContent.className = 'app-content visible';
+    renderAuthBar(user);
     loadFromFirestore();
   } else {
+    loginScreen.style.display = '';
+    appContent.className = 'app-content';
     setSyncStatus('', '');
   }
 });
