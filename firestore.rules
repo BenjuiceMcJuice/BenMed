@@ -2,12 +2,12 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Shared patient data — any authenticated user can read/write
+    // Only Heather and Ben can access patient data
     match /patients/{patientId} {
-      allow read, write: if request.auth != null;
+      allow read, write: if request.auth != null &&
+        request.auth.uid in ['Cg9SdWI8o1QdMAL7YkmxKTFkYcM2', 'qbfqkYu8VCbRRTqBNjZtATwPFkY2'];
     }
 
-    // Deny everything else
     match /{document=**} {
       allow read, write: if false;
     }
