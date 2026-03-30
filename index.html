@@ -166,7 +166,8 @@ body { background:var(--bg); color:var(--text); font-family:-apple-system,Helvet
 .auth-bar.signed-out { justify-content:center; }
 .auth-user { display:flex; align-items:center; gap:8px; }
 .auth-avatar { width:28px; height:28px; border-radius:50%; border:2px solid var(--accent); }
-.auth-name { font-size:0.75rem; font-weight:600; color:var(--text); }
+.auth-name { font-size:0.75rem; font-weight:600; color:var(--text); cursor:pointer; }
+.auth-name:hover { text-decoration:underline; }
 .auth-btn { padding:7px 16px; border-radius:7px; font-weight:700; font-size:0.78rem; cursor:pointer; border:none; -webkit-appearance:none; }
 .auth-btn.sign-in { background:var(--accent); color:#fff; }
 .auth-btn.sign-out { background:none; color:var(--muted); border:1px solid var(--border); font-size:0.68rem; padding:5px 12px; }
@@ -903,6 +904,25 @@ firebase.initializeApp(firebaseConfig);
 var auth = firebase.auth();
 var db   = firebase.firestore();
 var currentUser = null;
+var customName = '';
+
+function getDisplayName() {
+  if (customName) return customName;
+  if (currentUser && currentUser.displayName) return currentUser.displayName;
+  if (currentUser && currentUser.email) return currentUser.email;
+  return 'Signed in';
+}
+
+function editDisplayName() {
+  var current = getDisplayName();
+  var newName = prompt('Choose your display name:', current);
+  if (newName === null || !newName.trim()) return;
+  customName = newName.trim();
+  if (currentUser) {
+    db.collection('users').doc(currentUser.uid).set({ displayName: customName }, { merge: true });
+  }
+  renderAuthBar(currentUser);
+}
 
 function setSyncStatus(msg, cls) {
   var el2 = document.getElementById('sync-status');
@@ -938,7 +958,9 @@ function renderAuthBar(user) {
       info.appendChild(img);
     }
     var name = el('span', 'auth-name');
-    name.appendChild(txt(user.displayName || user.email || 'Signed in'));
+    name.appendChild(txt(getDisplayName()));
+    name.onclick = editDisplayName;
+    name.title = 'Tap to change name';
     info.appendChild(name);
     bar.appendChild(info);
     var btn = el('button', 'auth-btn sign-out');
@@ -1022,7 +1044,11 @@ auth.onAuthStateChanged(function(user) {
   if (user) {
     loginScreen.style.display = 'none';
     appContent.className = 'app-content visible';
-    renderAuthBar(user);
+    // Load custom name then render
+    db.collection('users').doc(user.uid).get().then(function(doc) {
+      if (doc.exists && doc.data().displayName) { customName = doc.data().displayName; }
+      renderAuthBar(user);
+    }).catch(function() { renderAuthBar(user); });
     loadFromFirestore();
   } else {
     loginScreen.style.display = '';
