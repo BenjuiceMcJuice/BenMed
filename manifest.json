@@ -2,7 +2,7 @@
   "name": "BenMed",
   "short_name": "BenMed",
   "description": "Post-surgery medication & pain tracker",
-  "start_url": "/",
+  "start_url": ".",
   "display": "standalone",
   "background_color": "#0a3d5c",
   "theme_color": "#0a3d5c",
