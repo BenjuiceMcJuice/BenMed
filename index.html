@@ -388,7 +388,7 @@ function findMed(id) { for (var i = 0; i < meds.length; i++) { if (meds[i].id ==
 
 // Pain logging
 function logPain(score) {
-  pain.push({ score: score, ts: Date.now() });
+  pain.push({ score: score, ts: Date.now(), by: getDisplayName() });
   writePain();
   render();
 }
@@ -435,7 +435,7 @@ function openEditModal(idx) {
 function closeModal() { document.getElementById('modal-overlay').className = 'modal-overlay'; }
 function confirmModal() {
   var ts = tsFromInputs();
-  if (modalMode === 'log') { hist.push({ medId: modalMedId, ts: ts }); }
+  if (modalMode === 'log') { hist.push({ medId: modalMedId, ts: ts, by: getDisplayName() }); }
   else if (modalMode === 'edit' && modalHistIdx >= 0) { hist[modalHistIdx].ts = ts; }
   writeHist(); closeModal(); render();
 }
@@ -801,7 +801,9 @@ function renderHist() {
       var h = hist[entry.idx];
       var med = findMed(h.medId);
       var name = el('div','hist-name is-med'); name.appendChild(txt(med ? med.name : h.medId));
-      var time = el('div','hist-time'); time.appendChild(txt(dateStr+' \u00b7 '+fmtTime(h.ts)+' \u00b7 '+fmtAgo(h.ts)));
+      var timeStr = dateStr+' \u00b7 '+fmtTime(h.ts)+' \u00b7 '+fmtAgo(h.ts);
+      if (h.by) timeStr += ' \u00b7 by ' + h.by;
+      var time = el('div','hist-time'); time.appendChild(txt(timeStr));
       info.appendChild(name); info.appendChild(time);
       var actions = el('div','hist-actions');
       var editBtn = el('button','edit-btn'); editBtn.appendChild(txt('\u270e'));
@@ -821,7 +823,9 @@ function renderHist() {
       pscore.appendChild(txt('Pain: ' + p.score + '/10'));
       pname.appendChild(pdot);
       pname.appendChild(pscore);
-      var ptime = el('div','hist-time'); ptime.appendChild(txt(dateStr+' \u00b7 '+fmtTime(p.ts)+' \u00b7 '+fmtAgo(p.ts)));
+      var ptimeStr = dateStr+' \u00b7 '+fmtTime(p.ts)+' \u00b7 '+fmtAgo(p.ts);
+      if (p.by) ptimeStr += ' \u00b7 by ' + p.by;
+      var ptime = el('div','hist-time'); ptime.appendChild(txt(ptimeStr));
       info.appendChild(pname); info.appendChild(ptime);
       var pactions = el('div','hist-actions');
       var pdelBtn = el('button','del-btn'); pdelBtn.appendChild(txt('\u2715'));
