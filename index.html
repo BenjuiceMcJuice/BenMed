@@ -957,7 +957,7 @@ function editDisplayName() {
   if (newName === null || !newName.trim()) return;
   customName = newName.trim();
   if (currentUser) {
-    db.collection('users').doc(currentUser.uid).set({ displayName: customName }, { merge: true });
+    db.collection('patients').doc('ben').set({ displayName: customName }, { merge: true });
   }
   renderAuthBar(currentUser);
 }
@@ -1017,16 +1017,16 @@ function renderAuthBar(user) {
 // ── Firestore sync ───────────────────────────────────────────────────────
 var syncDebounce = null;
 
-function userDocRef() {
+function sharedDocRef() {
   if (!currentUser) return null;
-  return db.collection('users').doc(currentUser.uid);
+  return db.collection('patients').doc('ben');
 }
 
 function syncToFirestore() {
   if (!currentUser) return;
   if (syncDebounce) clearTimeout(syncDebounce);
   syncDebounce = setTimeout(function() {
-    var ref = userDocRef();
+    var ref = sharedDocRef();
     if (!ref) return;
     setSyncStatus('Syncing...', '');
     ref.set({
@@ -1045,7 +1045,7 @@ function syncToFirestore() {
 
 function loadFromFirestore() {
   if (!currentUser) return;
-  var ref = userDocRef();
+  var ref = sharedDocRef();
   if (!ref) return;
   setSyncStatus('Loading...', '');
   ref.get().then(function(doc) {
@@ -1083,7 +1083,7 @@ auth.onAuthStateChanged(function(user) {
     loginScreen.style.display = 'none';
     appContent.className = 'app-content visible';
     // Load custom name then render
-    db.collection('users').doc(user.uid).get().then(function(doc) {
+    db.collection('patients').doc('ben').get().then(function(doc) {
       if (doc.exists && doc.data().displayName) { customName = doc.data().displayName; }
       renderAuthBar(user);
     }).catch(function() { renderAuthBar(user); });

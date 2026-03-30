@@ -2,9 +2,9 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Each user can only read/write their own document
-    match /users/{userId} {
-      allow read, write: if request.auth != null && request.auth.uid == userId;
+    // Shared patient data — any authenticated user can read/write
+    match /patients/{patientId} {
+      allow read, write: if request.auth != null;
     }
 
     // Deny everything else
