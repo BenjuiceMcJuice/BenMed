@@ -240,6 +240,11 @@ body { background:var(--bg); color:var(--text); font-family:-apple-system,Helvet
 .login-screen .login-sub { color:var(--muted); font-size:0.75rem; margin-bottom:30px; }
 .login-screen .auth-btn { padding:14px 32px; font-size:1rem; border-radius:10px; }
 .login-screen .login-icon { font-size:3rem; margin-bottom:16px; }
+/* ── Log modal star toggle ── */
+.ql-row { display:flex; align-items:stretch; gap:5px; }
+.ql-star { background:none; border:1px solid var(--border); border-radius:8px; font-size:1rem; cursor:pointer; padding:0 12px; color:var(--border); -webkit-appearance:none; flex-shrink:0; }
+.ql-star.fav { color:#e09000; border-color:#e09000; background:#fffbf0; }
+
 .app-content { display:none; }
 .app-content.visible { display:block; }
 </style>
@@ -310,9 +315,7 @@ body { background:var(--bg); color:var(--text); font-family:-apple-system,Helvet
 
   <!-- Medicines tab -->
   <div id="tab-medicines" class="tab-pane" style="display:none">
-    <div class="person-strip" id="person-strip"></div>
-    <div class="sec-title" id="med-lib-title">Medications</div>
-    <div class="manage-section" id="med-lib-section"></div>
+    <div id="med-tab-body"></div>
   </div>
 
   <!-- Manage tab -->
@@ -328,7 +331,7 @@ body { background:var(--bg); color:var(--text); font-family:-apple-system,Helvet
     <div class="pv-header" id="pv-header">
       <button class="pv-back" onclick="closePersonView()">&#8592; Back</button>
       <span class="pv-name" id="pv-name"></span>
-      <button class="pv-log-btn" onclick="openQuickLogModal()">&#10010; Log</button>
+      <button class="pv-log-btn" onclick="quickLogStep2(activePersonId)">&#10010; Log</button>
     </div>
     <div class="pv-content">
       <div class="warn-box" id="person-warn-box" style="display:none"></div>
@@ -613,8 +616,7 @@ function switchTab(tab) {
   else if (tab==='manage') renderManageTab();
 }
 function switchToAddMed() {
-  closePersonView();
-  switchTab('medicines');
+  quickLogStep2(activePersonId);
 }
 
 // ── Person view ──────────────────────────────────────────────────────────────
@@ -743,9 +745,51 @@ function renderDashboard() {
 
 // ── Medicines tab ────────────────────────────────────────────────────────────
 function renderMedicinesTab() {
-  if (!activePersonId&&members.length) activePersonId=members[0].id;
-  renderPersonStrip();
-  renderMedLibSection();
+  var cont=clrEl('med-tab-body'); if (!cont) return;
+
+  var sw=el('div'); sw.style.cssText='padding:10px 14px 6px;';
+  var search=el('input');
+  search.type='text'; search.placeholder='Search medicines…';
+  search.style.cssText='width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:8px;font-size:0.88rem;background:var(--surface2);color:var(--text);-webkit-appearance:none;box-sizing:border-box;';
+  sw.appendChild(search); cont.appendChild(sw);
+
+  var wrap=el('div'); cont.appendChild(wrap);
+
+  function buildList(q) {
+    while (wrap.firstChild) wrap.removeChild(wrap.firstChild);
+    q=(q||'').toLowerCase().trim();
+    var cats={}, catOrder=[];
+    for (var i=0;i<medLibrary.length;i++) {
+      var e=medLibrary[i];
+      if (q&&(e.name||'').toLowerCase().indexOf(q)===-1&&(e.notes||'').toLowerCase().indexOf(q)===-1) continue;
+      if (!cats[e.category]){cats[e.category]=[];catOrder.push(e.category);}
+      cats[e.category].push(e);
+    }
+    if (!catOrder.length) { var none=el('div','empty'); none.appendChild(txt('No medicines found')); wrap.appendChild(none); return; }
+    var sec=el('div','manage-section'); sec.style.margin='0 14px 14px';
+    for (var ci=0;ci<catOrder.length;ci++) {
+      var cat=catOrder[ci], entries=cats[cat];
+      var ch=el('div','lib-cat-head'); ch.appendChild(txt(cat)); sec.appendChild(ch);
+      for (var ei=0;ei<entries.length;ei++) {
+        var le=entries[ei];
+        var li=el('div','lib-item');
+        var linfo=el('div','lib-info');
+        var ln=el('div','lib-name'); ln.appendChild(txt(le.name)); linfo.appendChild(ln);
+        var ld=el('div','lib-dose');
+        var ad=le.doses&&le.doses.adult?le.doses.adult:null;
+        var doseStr=ad?ad.dose+' · every '+ad.hrs+'h · max '+ad.max+'/day':'Dose varies by age';
+        if (le.notes) doseStr+=' · '+le.notes.split('.')[0];
+        ld.appendChild(txt(doseStr)); linfo.appendChild(ld); li.appendChild(linfo);
+        sec.appendChild(li);
+      }
+    }
+    var cb=el('button','add-section-btn'); cb.appendChild(txt('+ Add custom medication'));
+    cb.onclick=function(){openCustomMedModal();}; sec.appendChild(cb);
+    wrap.appendChild(sec);
+  }
+
+  search.oninput=function(){buildList(search.value);};
+  buildList('');
 }
 function updatePersonWarn(person) {
   var box=document.getElementById('person-warn-box');
@@ -1017,7 +1061,7 @@ function openQuickLogModal() {
 
 function quickLogStep2(personId) {
   var member=findMember(personId);
-  buildModal('Log a medicine', 'Which medicine for '+member.name+'?');
+  buildModal('Log a medicine', 'Which medicine for '+member.name+'? Tap ★ to favourite.');
   var body=document.getElementById('modal-body');
 
   // Build favourites: assigned meds first, then recently used from history
@@ -1060,17 +1104,35 @@ function quickLogStep2(personId) {
     for (var j=0;j<shown.length;j++) {
       (function(le) {
         var doseInfo=getDoseForMember(personId,le.id);
+        var isFav=(personMeds[personId]||[]).some(function(m){return m.medId===le.id;});
+        var row=el('div','ql-row');
         var btn=el('button','modal-cancel');
-        btn.style.cssText='text-align:left;padding:10px 12px;border-radius:8px;';
+        btn.style.cssText='flex:1;text-align:left;padding:10px 12px;border-radius:8px;min-width:0;';
         var nm=el('span'); nm.style.cssText='font-weight:700;font-size:0.9rem;display:block;';
-        nm.appendChild(txt(le.name+(recentIds.indexOf(le.id)!==-1?' ★':'')));
-        var ds=el('span'); ds.style.cssText='font-size:0.72rem;color:#5a7a90;';
+        nm.appendChild(txt(le.name));
+        var ds=el('span'); ds.style.cssText='font-size:0.72rem;color:#5a7a90;display:block;margin-top:2px;';
         var dsText=doseInfo.dose+' · every '+doseInfo.hrs+'h · max '+doseInfo.max+'/day';
-        if (le.notes) dsText+=' · '+le.notes.split('.')[0]; // show first note (brand name)
+        if (le.notes) dsText+=' · '+le.notes.split('.')[0];
         ds.appendChild(txt(dsText));
         btn.appendChild(nm); btn.appendChild(ds);
         btn.onclick=function(){ quickLogStep3(personId, le.id, doseInfo); };
-        list.appendChild(btn);
+        var starBtn=el('button','ql-star'+(isFav?' fav':''));
+        starBtn.appendChild(txt('★'));
+        starBtn.title=isFav?'Remove from favourites':'Add to favourites';
+        (function(entry,di){
+          starBtn.onclick=function(e){
+            e.stopPropagation();
+            if (!personMeds[personId]) personMeds[personId]=[];
+            var idx=-1;
+            for (var k=0;k<personMeds[personId].length;k++){if(personMeds[personId][k].medId===entry.id){idx=k;break;}}
+            if (idx!==-1) personMeds[personId].splice(idx,1);
+            else personMeds[personId].push({medId:entry.id,dose:di.dose,hrs:di.hrs,max:di.max});
+            saveAndRender();
+            renderMedList(search.value);
+          };
+        })(le,doseInfo);
+        row.appendChild(btn); row.appendChild(starBtn);
+        list.appendChild(row);
       })(shown[j]);
     }
   }
