@@ -438,7 +438,15 @@ var DEFAULT_MED_LIBRARY = [
   {id:'naproxen', name:'Naproxen', category:'Prescription', notes:'NSAID. Avoid combining with Ibuprofen.',
    doses:{adult:{dose:'500mg',hrs:8,max:2}}},
   {id:'amoxicillin', name:'Amoxicillin', category:'Prescription', notes:'Antibiotic. Complete full course.',
-   doses:{adult:{dose:'500mg',hrs:8,max:3},child12:{dose:'250mg',hrs:8,max:3},child6:{dose:'125mg',hrs:8,max:3},child2:{dose:'125mg',hrs:8,max:3}}}
+   doses:{adult:{dose:'500mg',hrs:8,max:3},child12:{dose:'250mg',hrs:8,max:3},child6:{dose:'125mg',hrs:8,max:3},child2:{dose:'125mg',hrs:8,max:3}}},
+  {id:'calpol_kids', name:'Calpol (under 6)', category:'Analgesic / Antipyretic', notes:'Paracetamol suspension 120mg/5ml. For infants and young children.',
+   doses:{child2:{dose:'5ml (120mg)',hrs:4,max:4},infant:{dose:'2.5ml (60mg)',hrs:4,max:4}}},
+  {id:'calpol_6plus', name:'Calpol 6+', category:'Analgesic / Antipyretic', notes:'Paracetamol suspension 250mg/5ml. For children 6 and over.',
+   doses:{child12:{dose:'10ml (500mg)',hrs:4,max:4},child6:{dose:'5ml (250mg)',hrs:4,max:4}}},
+  {id:'ibuprofen_kids', name:'Ibuprofen (Children\'s)', category:'Analgesic / Antipyretic', notes:'Nurofen for Children. 100mg/5ml suspension. Not under 3 months.',
+   doses:{child12:{dose:'10ml (200mg)',hrs:6,max:3},child6:{dose:'7.5ml (150mg)',hrs:6,max:3},child2:{dose:'5ml (100mg)',hrs:6,max:3}}},
+  {id:'salbutamol', name:'Salbutamol Inhaler', category:'Prescription', notes:'Ventolin, blue reliever inhaler. Use for acute wheeze/asthma symptoms.',
+   doses:{adult:{dose:'1–2 puffs (100–200mcg)',hrs:4,max:4},child12:{dose:'1–2 puffs (100–200mcg)',hrs:4,max:4},child6:{dose:'1–2 puffs (100–200mcg)',hrs:4,max:4},child2:{dose:'1–2 puffs (100–200mcg)',hrs:4,max:4}}}
 ];
 
 var LS_MEMBERS    = 'bm_members';
