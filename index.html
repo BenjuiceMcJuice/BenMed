@@ -437,6 +437,13 @@ var DEFAULT_MED_LIBRARY = [
   {id:'salbutamol', name:'Salbutamol Inhaler', category:'Prescription', notes:'Ventolin, blue reliever inhaler. Use for acute wheeze/asthma symptoms.',
    doses:{adult:{dose:'1–2 puffs (100–200mcg)',hrs:4,max:4},child12:{dose:'1–2 puffs (100–200mcg)',hrs:4,max:4},child6:{dose:'1–2 puffs (100–200mcg)',hrs:4,max:4},child2:{dose:'1–2 puffs (100–200mcg)',hrs:4,max:4}}}
 ];
+// As-needed (PRN) medicines — never shown as overdue
+var PRN_IDS=['paracetamol','ibuprofen','aspirin','cetirizine','loratadine','chlorphenamine',
+  'dioralyte','gaviscon','senna','chloramphenicol_eye','hydrocortisone','clotrimazole',
+  'oramorph','codeine','naproxen','calpol_kids','calpol_6plus','ibuprofen_kids','salbutamol'];
+for (var _pi=0;_pi<DEFAULT_MED_LIBRARY.length;_pi++) {
+  if (PRN_IDS.indexOf(DEFAULT_MED_LIBRARY[_pi].id)!==-1) DEFAULT_MED_LIBRARY[_pi].prn=true;
+}
 
 var LS_MEMBERS    = 'bm_members';
 var LS_MEDLIB     = 'bm_medlib';
@@ -577,6 +584,14 @@ function nextTs(personId, medConfig) {
   var last=lastTaken(personId,medConfig.medId);
   return last ? last.ts+medConfig.hrs*3600000 : null;
 }
+function isPrn(medId) {
+  var le=findLibEntry(medId);
+  if (le&&le.prn!==undefined) return !!le.prn;
+  for (var i=0;i<DEFAULT_MED_LIBRARY.length;i++) {
+    if (DEFAULT_MED_LIBRARY[i].id===medId) return !!DEFAULT_MED_LIBRARY[i].prn;
+  }
+  return false;
+}
 function medStatus(personId, medConfig) {
   if (todayCount(personId,medConfig.medId)>=medConfig.max) return 'exhausted';
   var nt=nextTs(personId,medConfig);
@@ -590,7 +605,7 @@ function getPersonStatus(personId) {
   var hasOverdue=false, hasDue=false;
   for (var i=0;i<pMeds.length;i++) {
     var mc=pMeds[i], st=medStatus(personId,mc);
-    if (st==='ready') {
+    if (st==='ready'&&!isPrn(mc.medId)) {
       var last=lastTaken(personId,mc.medId);
       if (last) {
         var mins=(now-(last.ts+mc.hrs*3600000))/60000;
@@ -676,7 +691,7 @@ function renderDashboard() {
       var pMeds=personMeds[mbr.id]||[];
       for (var pi=0;pi<pMeds.length;pi++) {
         var mc=pMeds[pi], st=medStatus(mbr.id,mc);
-        if (st==='ready') {
+        if (st==='ready'&&!isPrn(mc.medId)) {
           var last=lastTaken(mbr.id,mc.medId);
           if (last) {
             var mins=Math.floor((now-(last.ts+mc.hrs*3600000))/60000);
@@ -732,7 +747,9 @@ function renderDashboard() {
         if (fst==='exhausted') { ms.className='fc-med-st fc-done'; ms.appendChild(txt('Done')); }
         else if (fst==='waiting'&&fnt) { ms.className='fc-med-st fc-wait'; ms.appendChild(txt(hrsToGo(fnt))); }
         else if (fst==='ready') {
-          if (flast) {
+          if (isPrn(fmc.medId)) {
+            ms.className='fc-med-st fc-ready'; ms.appendChild(txt('Ready'));
+          } else if (flast) {
             var ov=(now-(flast.ts+fmc.hrs*3600000))/60000;
             ms.className='fc-med-st '+(ov>120?'fc-overdue-st':'fc-ready');
             ms.appendChild(txt(ov>120?'Overdue':'Due now'));
