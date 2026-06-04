@@ -144,6 +144,8 @@ body { background:var(--bg); color:var(--text); font-family:-apple-system,Helvet
 .empty { text-align:center; color:var(--muted); font-size:0.75rem; padding:18px; }
 .clear-btn { display:block; width:100%; margin-top:8px; padding:8px; background:none; border:1px solid var(--border); border-radius:8px; color:var(--muted); font-size:0.72rem; cursor:pointer; -webkit-appearance:none; }
 
+.fc-med-last { font-size:0.58rem; color:var(--muted); margin-top:1px; }
+
 /* ── Family grid (dashboard) ── */
 .family-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin:0 14px 14px; }
 .family-card { background:var(--surface); border:1px solid var(--border); border-top:4px solid var(--accent); border-radius:10px; padding:12px; cursor:pointer; min-height:90px; transition:box-shadow 0.15s; }
@@ -720,13 +722,16 @@ function renderDashboard() {
     } else {
       for (var fpi=0;fpi<recentMeds.length;fpi++) {
         var fmc=recentMeds[fpi], fle=findLibEntry(fmc.medId), fst=medStatus(fm.id,fmc), fnt=nextTs(fm.id,fmc);
+        var flast=lastTaken(fm.id,fmc.medId);
         var mr=el('div','fc-med-row');
-        var mn=el('span','fc-med-name'); mn.appendChild(txt(fle?fle.name:fmc.medId)); mr.appendChild(mn);
+        var mnWrap=el('div'); mnWrap.style.cssText='flex:1;min-width:0;';
+        var mn=el('div','fc-med-name'); mn.appendChild(txt(fle?fle.name:fmc.medId)); mnWrap.appendChild(mn);
+        if (flast) { var mlt=el('div','fc-med-last'); mlt.appendChild(txt(fmtAgo(flast.ts))); mnWrap.appendChild(mlt); }
+        mr.appendChild(mnWrap);
         var ms=el('span','fc-med-st');
         if (fst==='exhausted') { ms.className='fc-med-st fc-done'; ms.appendChild(txt('Done')); }
         else if (fst==='waiting'&&fnt) { ms.className='fc-med-st fc-wait'; ms.appendChild(txt(hrsToGo(fnt))); }
         else if (fst==='ready') {
-          var flast=lastTaken(fm.id,fmc.medId);
           if (flast) {
             var ov=(now-(flast.ts+fmc.hrs*3600000))/60000;
             ms.className='fc-med-st '+(ov>120?'fc-overdue-st':'fc-ready');
