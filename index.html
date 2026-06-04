@@ -695,16 +695,19 @@ function renderDashboard() {
     var age2=fm.dob?formatAge(fm.dob):null;
     if (age2) { var ageS=el('span','fc-age'); ageS.appendChild(txt(' · '+age2)); cName.appendChild(ageS); }
     card.appendChild(cName);
-    if (!fPMeds.length) {
-      var nm=el('div','fc-nomeds'); nm.appendChild(txt('No active medications')); card.appendChild(nm);
+    var recentMeds=fPMeds.filter(function(mc){
+      var fl=lastTaken(fm.id,mc.medId);
+      return fl&&(now-fl.ts)<48*3600000;
+    });
+    if (!recentMeds.length) {
+      var nm=el('div','fc-nomeds'); nm.appendChild(txt('No recent medications')); card.appendChild(nm);
     } else {
-      for (var fpi=0;fpi<fPMeds.length;fpi++) {
-        var fmc=fPMeds[fpi], fle=findLibEntry(fmc.medId), fst=medStatus(fm.id,fmc), fnt=nextTs(fm.id,fmc);
+      for (var fpi=0;fpi<recentMeds.length;fpi++) {
+        var fmc=recentMeds[fpi], fle=findLibEntry(fmc.medId), fst=medStatus(fm.id,fmc), fnt=nextTs(fm.id,fmc);
         var mr=el('div','fc-med-row');
         var mn=el('span','fc-med-name'); mn.appendChild(txt(fle?fle.name:fmc.medId)); mr.appendChild(mn);
         var ms=el('span','fc-med-st');
         if (fst==='exhausted') { ms.className='fc-med-st fc-done'; ms.appendChild(txt('Done')); }
-        else if (fst==='inactive') { ms.className='fc-med-st fc-none'; ms.appendChild(txt('Inactive')); }
         else if (fst==='waiting'&&fnt) { ms.className='fc-med-st fc-wait'; ms.appendChild(txt(hrsToGo(fnt))); }
         else if (fst==='ready') {
           var flast=lastTaken(fm.id,fmc.medId);
