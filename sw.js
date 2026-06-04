@@ -1,4 +1,4 @@
-var CACHE = 'benmed-v4';
+var CACHE = 'benmed-v5';
 var ASSETS = ['./', './index.html', './manifest.json', './icon-192.png', './icon-512.png'];
 
 self.addEventListener('install', function(e) {
