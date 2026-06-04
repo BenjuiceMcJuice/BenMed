@@ -578,6 +578,8 @@ function medStatus(personId, medConfig) {
   if (todayCount(personId,medConfig.medId)>=medConfig.max) return 'exhausted';
   var nt=nextTs(personId,medConfig);
   if (nt&&Date.now()<nt) return 'waiting';
+  var last=lastTaken(personId,medConfig.medId);
+  if (last&&(Date.now()-last.ts)>48*3600000) return 'inactive';
   return 'ready';
 }
 function getPersonStatus(personId) {
@@ -592,6 +594,7 @@ function getPersonStatus(personId) {
         if (mins>120) hasOverdue=true; else hasDue=true;
       }
     }
+    if (st==='inactive') { /* silent — not an active course */ }
   }
   if (hasOverdue) return 'overdue';
   if (hasDue) return 'due';
@@ -665,6 +668,7 @@ function renderDashboard() {
             }
           }
         }
+        // inactive meds (no dose in 48hrs) are silently skipped
       }
     }
     if (overdueItems.length) {
@@ -700,6 +704,7 @@ function renderDashboard() {
         var mn=el('span','fc-med-name'); mn.appendChild(txt(fle?fle.name:fmc.medId)); mr.appendChild(mn);
         var ms=el('span','fc-med-st');
         if (fst==='exhausted') { ms.className='fc-med-st fc-done'; ms.appendChild(txt('Done')); }
+        else if (fst==='inactive') { ms.className='fc-med-st fc-none'; ms.appendChild(txt('Inactive')); }
         else if (fst==='waiting'&&fnt) { ms.className='fc-med-st fc-wait'; ms.appendChild(txt(hrsToGo(fnt))); }
         else if (fst==='ready') {
           var flast=lastTaken(fm.id,fmc.medId);
