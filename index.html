@@ -225,7 +225,16 @@ body { background:var(--bg); color:var(--text); font-family:-apple-system,Helvet
 .modal-cancel  { flex:1; padding:10px; background:none; color:var(--muted); border:1px solid var(--border); border-radius:8px; font-size:0.85rem; cursor:pointer; -webkit-appearance:none; }
 .modal-danger  { flex:1; padding:10px; background:none; color:var(--danger); border:1px solid var(--danger-bd); border-radius:8px; font-size:0.85rem; cursor:pointer; -webkit-appearance:none; }
 
-/* ── Login screen ── */
+/* ── Person view (slide-in) ── */
+.person-view { position:fixed; top:0; left:0; right:0; bottom:0; background:var(--bg); z-index:80; transform:translateX(100%); transition:transform 0.28s cubic-bezier(0.4,0,0.2,1); display:flex; flex-direction:column; }
+.person-view.open { transform:translateX(0); }
+.pv-header { padding:12px 14px 11px; display:flex; align-items:center; gap:10px; flex-shrink:0; }
+.pv-back { background:none; border:none; color:rgba(255,255,255,0.85); font-size:1rem; font-weight:700; cursor:pointer; padding:4px 8px 4px 0; -webkit-appearance:none; white-space:nowrap; }
+.pv-name { color:#fff; font-size:1.05rem; font-weight:800; flex:1; }
+.pv-log-btn { padding:7px 14px; background:rgba(255,255,255,0.18); color:#fff; border:1px solid rgba(255,255,255,0.4); border-radius:8px; font-weight:700; font-size:0.78rem; cursor:pointer; -webkit-appearance:none; white-space:nowrap; }
+.pv-content { flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch; padding-bottom:20px; }
+
+
 .login-screen { display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:80vh; padding:40px 20px; text-align:center; }
 .login-screen h2 { color:var(--head-bg); font-size:1.8rem; font-weight:800; margin-bottom:4px; }
 .login-screen .login-sub { color:var(--muted); font-size:0.75rem; margin-bottom:30px; }
@@ -288,7 +297,6 @@ body { background:var(--bg); color:var(--text); font-family:-apple-system,Helvet
 <div class="app-content" id="app-content">
   <div class="auth-bar" id="auth-bar"></div>
   <div class="sync-status" id="sync-status"></div>
-  <div class="person-strip" id="person-strip"></div>
 
   <!-- Dashboard tab -->
   <div id="tab-dashboard" class="tab-pane">
@@ -300,34 +308,41 @@ body { background:var(--bg); color:var(--text); font-family:-apple-system,Helvet
     <div class="family-grid" id="family-grid"></div>
   </div>
 
-  <!-- Person tab -->
-  <div id="tab-person" class="tab-pane" style="display:none">
-    <div class="warn-box" id="person-warn-box" style="display:none"></div>
-    <div style="padding:10px 14px 4px;">
-      <button class="log-med-btn" onclick="openQuickLogModal()">&#10010; Log a medicine</button>
-    </div>
-    <div class="sec-title-row" style="margin-top:12px;">
-      <div class="sec-title" id="meds-sec-title">Medications</div>
-      <button class="sec-add-btn" onclick="switchToAddMed()">+ Add med</button>
-    </div>
-    <div id="person-med-list"></div>
-    <div class="sec-title">Recent history</div>
-    <div class="hist-wrap">
-      <div id="person-hist-list" class="hist-list"></div>
-      <button class="clear-btn" onclick="clearPersonHistory()">Clear this person's history</button>
-    </div>
+  <!-- Medicines tab -->
+  <div id="tab-medicines" class="tab-pane" style="display:none">
+    <div class="person-strip" id="person-strip"></div>
+    <div class="sec-title" id="med-lib-title">Medications</div>
+    <div class="manage-section" id="med-lib-section"></div>
   </div>
 
   <!-- Manage tab -->
   <div id="tab-manage" class="tab-pane" style="display:none">
     <div class="sec-title">Family members</div>
     <div class="manage-section" id="people-section"></div>
-
-    <div class="sec-title" id="med-lib-title">Medications</div>
-    <div class="manage-section" id="med-lib-section"></div>
-
     <div class="sec-title">Access &amp; users</div>
     <div class="manage-section" id="access-section"></div>
+  </div>
+
+  <!-- Person view (full-screen slide-in) -->
+  <div id="person-view" class="person-view">
+    <div class="pv-header" id="pv-header">
+      <button class="pv-back" onclick="closePersonView()">&#8592; Back</button>
+      <span class="pv-name" id="pv-name"></span>
+      <button class="pv-log-btn" onclick="openQuickLogModal()">&#10010; Log</button>
+    </div>
+    <div class="pv-content">
+      <div class="warn-box" id="person-warn-box" style="display:none"></div>
+      <div class="sec-title-row" style="margin-top:12px;">
+        <div class="sec-title" id="meds-sec-title">Medications</div>
+        <button class="sec-add-btn" onclick="switchToAddMed()">+ Add med</button>
+      </div>
+      <div id="person-med-list"></div>
+      <div class="sec-title">Recent history</div>
+      <div class="hist-wrap">
+        <div id="person-hist-list" class="hist-list"></div>
+        <button class="clear-btn" onclick="clearPersonHistory()">Clear history</button>
+      </div>
+    </div>
   </div>
 
   <nav class="tab-bar">
@@ -335,7 +350,7 @@ body { background:var(--bg); color:var(--text); font-family:-apple-system,Helvet
       <span class="tab-icon">&#9783;</span>
       <span>Family</span>
     </button>
-    <button class="tab-btn" id="tabbtn-person" onclick="switchTab('person')">
+    <button class="tab-btn" id="tabbtn-medicines" onclick="switchTab('medicines')">
       <span class="tab-icon">&#10010;</span>
       <span>Medicines</span>
     </button>
@@ -587,24 +602,41 @@ function getPersonStatus(personId) {
 // ── Tab switching ────────────────────────────────────────────────────────────
 function switchTab(tab) {
   activeTab=tab;
-  ['dashboard','person','manage'].forEach(function(t) {
+  ['dashboard','medicines','manage'].forEach(function(t) {
     var pane=document.getElementById('tab-'+t);
     if (pane) pane.style.display=(t===tab)?'':'none';
     var btn=document.getElementById('tabbtn-'+t);
     if (btn) btn.className='tab-btn'+(t===tab?' active':'');
   });
-  var strip=document.getElementById('person-strip');
-  if (strip) strip.style.display=(tab==='person')?'':'none';
   if (tab==='dashboard') renderDashboard();
-  else if (tab==='person') renderPersonTab();
+  else if (tab==='medicines') renderMedicinesTab();
   else if (tab==='manage') renderManageTab();
 }
 function switchToAddMed() {
-  switchTab('manage');
-  setTimeout(function() {
-    var s=document.getElementById('med-lib-section');
-    if (s) s.scrollIntoView({behavior:'smooth'});
-  },100);
+  closePersonView();
+  switchTab('medicines');
+}
+
+// ── Person view ──────────────────────────────────────────────────────────────
+function openPersonView(personId) {
+  activePersonId=personId;
+  renderPersonView();
+  var pv=document.getElementById('person-view');
+  if (pv) { pv.classList.add('open'); pv.querySelector('.pv-content').scrollTop=0; }
+}
+function closePersonView() {
+  var pv=document.getElementById('person-view');
+  if (pv) pv.classList.remove('open');
+}
+function renderPersonView() {
+  var person=findMember(activePersonId); if (!person) return;
+  setTxt('pv-name', person.name);
+  var hdr=document.getElementById('pv-header');
+  if (hdr) hdr.style.background=personColor(activePersonId);
+  setTxt('meds-sec-title', person.name+"'s medications");
+  updatePersonWarn(person);
+  renderPersonMeds();
+  renderPersonHist();
 }
 
 // ── Person strip ─────────────────────────────────────────────────────────────
@@ -621,8 +653,7 @@ function renderPersonStrip() {
       pill.onclick=function() {
         activePersonId=id;
         renderPersonStrip();
-        if (activeTab==='person') renderPersonTab();
-        else if (activeTab==='dashboard') {}
+        renderMedLibSection();
       };
     })(m.id);
     strip.appendChild(pill);
@@ -704,21 +735,17 @@ function renderDashboard() {
       }
     }
     (function(id) {
-      card.onclick=function() { activePersonId=id; renderPersonStrip(); switchTab('person'); };
+      card.onclick=function() { openPersonView(id); };
     })(fm.id);
     grid.appendChild(card);
   }
 }
 
-// ── Person tab ───────────────────────────────────────────────────────────────
-function renderPersonTab() {
-  if (!activePersonId&&members.length) { activePersonId=members[0].id; renderPersonStrip(); }
-  var person=findMember(activePersonId);
-  if (!person) { return; }
-  setTxt('meds-sec-title', person.name+"'s medications");
-  updatePersonWarn(person);
-  renderPersonMeds();
-  renderPersonHist();
+// ── Medicines tab ────────────────────────────────────────────────────────────
+function renderMedicinesTab() {
+  if (!activePersonId&&members.length) activePersonId=members[0].id;
+  renderPersonStrip();
+  renderMedLibSection();
 }
 function updatePersonWarn(person) {
   var box=document.getElementById('person-warn-box');
@@ -830,7 +857,6 @@ function renderPersonHist() {
 // ── Manage tab ───────────────────────────────────────────────────────────────
 function renderManageTab() {
   renderPeopleSection();
-  renderMedLibSection();
   renderAccessSection();
 }
 function renderPeopleSection() {
@@ -1251,10 +1277,11 @@ function saveAndRender() {
   render();
 }
 function render() {
-  renderPersonStrip();
   if (activeTab==='dashboard') renderDashboard();
-  else if (activeTab==='person') renderPersonTab();
+  else if (activeTab==='medicines') renderMedicinesTab();
   else if (activeTab==='manage') renderManageTab();
+  var pv=document.getElementById('person-view');
+  if (pv&&pv.classList.contains('open')) renderPersonView();
 }
 
 // ── Firebase ─────────────────────────────────────────────────────────────────
