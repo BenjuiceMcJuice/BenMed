@@ -83,6 +83,9 @@ body { background:var(--bg); color:var(--text); font-family:-apple-system,Helvet
 /* ── Warning box ── */
 .warn-box { background:var(--warn-bg); border-left:4px solid var(--warn-bd); margin:8px 14px; padding:8px 12px; font-size:0.72rem; color:var(--warn); border-radius:0 6px 6px 0; line-height:1.6; }
 
+/* ── Log medicine button ── */
+.log-med-btn { width:100%; padding:13px; background:var(--accent); color:#fff; border:none; border-radius:10px; font-size:1rem; font-weight:700; cursor:pointer; -webkit-appearance:none; letter-spacing:0.02em; }
+
 /* ── Overdue banner ── */
 .overdue-banner { background:#fde0e0; border-left:4px solid #e08080; margin:8px 14px; padding:9px 12px; border-radius:0 6px 6px 0; }
 .overdue-title { font-size:0.72rem; font-weight:700; color:var(--danger); margin-bottom:4px; }
@@ -314,6 +317,9 @@ body { background:var(--bg); color:var(--text); font-family:-apple-system,Helvet
   <!-- Dashboard tab -->
   <div id="tab-dashboard" class="tab-pane">
     <div class="overdue-banner" id="overdue-banner" style="display:none"></div>
+    <div style="padding:10px 14px 4px;">
+      <button class="log-med-btn" onclick="openQuickLogModal()">&#10010; Log a medicine</button>
+    </div>
     <div class="sec-title">Family overview</div>
     <div class="family-grid" id="family-grid"></div>
   </div>
@@ -611,7 +617,7 @@ function switchTab(tab) {
     if (btn) btn.className='tab-btn'+(t===tab?' active':'');
   });
   var strip=document.getElementById('person-strip');
-  if (strip) strip.style.display=(tab==='manage')?'none':'';
+  if (strip) strip.style.display=(tab==='person')?'':'none';
   if (tab==='dashboard') renderDashboard();
   else if (tab==='person') renderPersonTab();
   else if (tab==='manage') renderManageTab();
@@ -996,6 +1002,93 @@ function addModalBtns(btns) {
     var btn=el('button',b.cls||'modal-cancel'); btn.appendChild(txt(b.label));
     btn.onclick=b.fn; cont.appendChild(btn);
   });
+}
+
+// ── Quick log: step 1 pick person, step 2 pick med, step 3 confirm ──────────
+function openQuickLogModal() {
+  buildModal('Log a medicine', 'Who is it for?');
+  var body=document.getElementById('modal-body');
+  // Person picker buttons
+  var grid=el('div'); grid.style.cssText='display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:4px;';
+  for (var i=0;i<members.length;i++) {
+    (function(m) {
+      var btn=el('button','modal-cancel');
+      btn.style.cssText='padding:12px 8px;font-weight:700;font-size:0.9rem;border-radius:8px;';
+      btn.appendChild(txt(m.name));
+      btn.onclick=function(){ quickLogStep2(m.id); };
+      grid.appendChild(btn);
+    })(members[i]);
+  }
+  body.appendChild(grid);
+  addModalBtns([{label:'Cancel',cls:'modal-cancel',fn:closeModal}]);
+}
+
+function quickLogStep2(personId) {
+  var member=findMember(personId);
+  buildModal('Log a medicine', 'Which medicine for '+member.name+'?');
+  var body=document.getElementById('modal-body');
+
+  // Build med list: recently used by this person first, then rest of library
+  var recentIds=[];
+  var sorted=hist.filter(function(h){return h.personId===personId;})
+    .sort(function(a,b){return b.ts-a.ts;});
+  for (var i=0;i<sorted.length;i++) {
+    if (recentIds.indexOf(sorted[i].medId)===-1) recentIds.push(sorted[i].medId);
+  }
+  var allMeds=medLibrary.slice().sort(function(a,b){
+    var ai=recentIds.indexOf(a.id), bi=recentIds.indexOf(b.id);
+    if (ai===-1&&bi===-1) return 0;
+    if (ai===-1) return 1;
+    if (bi===-1) return -1;
+    return ai-bi;
+  });
+
+  var list=el('div'); list.style.cssText='display:flex;flex-direction:column;gap:6px;max-height:50vh;overflow-y:auto;margin-bottom:4px;';
+  for (var j=0;j<allMeds.length;j++) {
+    (function(le) {
+      var doseInfo=getDoseForMember(personId,le.id);
+      if (!doseInfo) return; // age-inappropriate — skip
+      var btn=el('button','modal-cancel');
+      btn.style.cssText='text-align:left;padding:10px 12px;border-radius:8px;';
+      var nm=el('span'); nm.style.cssText='font-weight:700;font-size:0.9rem;display:block;';
+      nm.appendChild(txt(le.name+(recentIds.indexOf(le.id)!==-1?' ★':'')));
+      var ds=el('span'); ds.style.cssText='font-size:0.72rem;color:#5a7a90;';
+      ds.appendChild(txt(doseInfo.dose+' · every '+doseInfo.hrs+'h · max '+doseInfo.max+'/day'));
+      btn.appendChild(nm); btn.appendChild(ds);
+      btn.onclick=function(){ quickLogStep3(personId, le.id, doseInfo); };
+      list.appendChild(btn);
+    })(allMeds[j]);
+  }
+  body.appendChild(list);
+  addModalBtns([
+    {label:'Back',cls:'modal-cancel',fn:openQuickLogModal},
+    {label:'Cancel',cls:'modal-cancel',fn:closeModal}
+  ]);
+}
+
+function quickLogStep3(personId, medId, doseInfo) {
+  var member=findMember(personId), le=findLibEntry(medId);
+  buildModal('Confirm dose', (le?le.name:medId)+' for '+member.name);
+  var body=document.getElementById('modal-body');
+  var info=el('div'); info.style.cssText='background:#e8f0f7;border-radius:8px;padding:10px 12px;margin-bottom:12px;font-size:0.85rem;color:#0f2030;';
+  info.appendChild(txt('Dose: '+doseInfo.dose));
+  body.appendChild(info);
+  var now=new Date();
+  addModalRow('Date','modal-date','date',now.getFullYear()+'-'+pad(now.getMonth()+1)+'-'+pad(now.getDate()));
+  addModalRow('Time','modal-time','time',pad(now.getHours())+':'+pad(now.getMinutes()));
+  // Ensure med is in personMeds for this person
+  addModalBtns([
+    {label:'Back',cls:'modal-cancel',fn:function(){quickLogStep2(personId);}},
+    {label:'Log dose',cls:'modal-confirm',fn:function(){
+      var ts=tsFromInputs(); if (!ts) return;
+      if (!personMeds[personId]) personMeds[personId]=[];
+      var already=personMeds[personId].filter(function(m){return m.medId===medId;});
+      if (!already.length) personMeds[personId].push({medId:medId,dose:doseInfo.dose,hrs:doseInfo.hrs,max:doseInfo.max});
+      hist.push({medId:medId,personId:personId,ts:ts,by:getDisplayName()});
+      saveAndRender();
+      closeModal();
+    }}
+  ]);
 }
 
 function openLogModal(personId, medConfig) {
