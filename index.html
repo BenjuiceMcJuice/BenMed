@@ -91,66 +91,42 @@ body { background:var(--bg); color:var(--text); font-family:-apple-system,Helvet
 .overdue-title { font-size:0.72rem; font-weight:700; color:var(--danger); margin-bottom:4px; }
 .overdue-row { font-size:0.7rem; color:var(--danger); line-height:1.7; }
 
-/* ── Summary table ── */
-.summary-wrap { margin:0 14px 14px; background:var(--surface); border:1px solid var(--border); border-radius:10px; overflow:hidden; }
-.sum-head { display:flex; background:var(--head-bg); padding:8px 10px; }
-.sum-hcell { font-size:0.62rem; font-weight:700; color:#90bcd8; text-transform:uppercase; letter-spacing:0.08em; }
-.sum-col1 { width:26%; flex-shrink:0; }
-.sum-col2 { width:22%; flex-shrink:0; }
-.sum-col3 { width:30%; flex-shrink:0; }
-.sum-col4 { width:22%; flex-shrink:0; text-align:right; }
-.sum-row { display:flex; align-items:center; padding:10px 10px; border-bottom:1px solid var(--border); }
-.sum-row:last-child { border-bottom:none; }
-.sum-row:nth-child(even) { background:var(--surface2); }
-.sum-c1 { width:26%; flex-shrink:0; font-size:0.82rem; font-weight:700; color:var(--text); line-height:1.3; }
-.sum-c1-sub { font-size:0.6rem; font-weight:400; color:var(--muted); }
-.sum-c2 { width:22%; flex-shrink:0; font-size:0.72rem; }
-.sum-c3 { width:30%; flex-shrink:0; font-size:0.72rem; font-weight:600; }
-.sum-c4 { width:22%; flex-shrink:0; text-align:right; }
-.sum-log-btn { padding:6px 10px; border-radius:6px; font-weight:700; font-size:0.68rem; cursor:pointer; border:none; -webkit-appearance:none; }
-.sum-log-btn.s-go   { background:var(--accent); color:#fff; }
-.sum-log-btn.s-last { background:#b36b00; color:#fff; }
-.sum-log-btn.s-wait { background:var(--warn-bg); color:var(--warn); border:1px solid var(--warn-bd); }
-.sum-log-btn.s-done { background:var(--danger-bg); color:var(--danger); font-weight:600; font-size:0.6rem; }
 .col-ok     { color:var(--ok); }
 .col-warn   { color:#b36b00; }
 .col-danger { color:var(--danger); }
 .col-muted  { color:var(--muted); }
 
-/* ── Med cards ── */
-.card { background:var(--surface); border:1px solid var(--border); border-radius:10px; margin:0 14px 10px; overflow:hidden; }
-.card.ready     { border-left:4px solid var(--ok); }
-.card.waiting   { border-left:4px solid var(--warn-bd); }
-.card.exhausted { border-left:4px solid var(--danger-bd); }
-.card-head { display:flex; justify-content:space-between; align-items:center; padding:11px 14px 9px; }
-.med-name { font-weight:700; font-size:0.95rem; color:var(--text); }
+/* ── Badge (shared) ── */
 .badge { font-size:0.58rem; font-weight:700; padding:3px 8px; border-radius:20px; text-transform:uppercase; letter-spacing:0.07em; }
 .b-ok   { background:var(--ok-bg);     color:var(--ok);     border:1px solid var(--ok-bd); }
 .b-wait { background:var(--warn-bg);   color:var(--warn);   border:1px solid var(--warn-bd); }
 .b-done { background:var(--danger-bg); color:var(--danger); border:1px solid var(--danger-bd); }
 .b-none { background:var(--info-bg);   color:var(--info);   border:1px solid var(--info-bd); }
-.card-body { border-top:1px solid var(--border); padding:0 13px 12px; }
-.stats { display:flex; flex-wrap:wrap; gap:6px; margin:10px 0; }
-.stat { background:var(--surface2); border:1px solid var(--border); border-radius:7px; padding:7px 9px; width:calc(50% - 3px); }
-.slabel { font-size:0.56rem; color:var(--muted); text-transform:uppercase; letter-spacing:0.07em; margin-bottom:2px; }
-.sval { font-size:0.78rem; color:var(--text); font-weight:600; }
-.sval.hi   { color:var(--accent); }
-.sval.ok   { color:var(--ok); }
-.sval.warn { color:#b36b00; }
-.sval.red  { color:var(--danger); }
-.btn { display:block; width:100%; padding:11px; border:none; border-radius:7px; font-weight:700; font-size:0.85rem; cursor:pointer; margin-top:4px; text-align:center; -webkit-appearance:none; }
-.btn-go   { background:var(--accent); color:#fff; }
-.btn-last { background:#b36b00; color:#fff; }
-.btn-wait { background:var(--warn-bg); color:var(--warn); border:1px solid var(--warn-bd); }
-.btn-done { background:var(--danger-bg); color:var(--danger); border:1px solid var(--danger-bd); }
-.set-toggle { display:flex; justify-content:space-between; align-items:center; font-size:0.68rem; color:var(--muted); cursor:pointer; margin-top:9px; padding-top:9px; border-top:1px solid var(--border); }
-.set-panel { display:none; margin-top:9px; background:var(--surface2); border:1px solid var(--border); border-radius:7px; padding:11px; }
-.set-panel.open { display:block; }
+
+/* ── Clean medicine cards ── */
+.mc-card { background:var(--surface); border:1px solid var(--border); border-left-width:4px; border-left-style:solid; border-left-color:var(--border); border-radius:12px; margin:0 14px 8px; overflow:hidden; }
+.mc-card.ready     { border-left-color:var(--ok); }
+.mc-card.waiting   { border-left-color:var(--warn-bd); }
+.mc-card.exhausted { border-left-color:var(--danger-bd); }
+.mc-main { display:flex; align-items:center; padding:12px 14px 8px; gap:10px; }
+.mc-info { flex:1; min-width:0; }
+.mc-name { font-weight:700; font-size:0.95rem; color:var(--text); }
+.mc-meta { font-size:0.68rem; color:var(--muted); margin-top:3px; }
+.mc-actions { display:flex; align-items:center; gap:7px; flex-shrink:0; }
+.mc-log-btn { padding:7px 14px; border:none; border-radius:8px; font-weight:700; font-size:0.78rem; cursor:pointer; white-space:nowrap; -webkit-appearance:none; }
+.mc-log-go   { background:var(--accent); color:#fff; }
+.mc-log-last { background:#b36b00; color:#fff; }
+.mc-log-wait { background:var(--warn-bg); color:var(--warn); border:1px solid var(--warn-bd); }
+.mc-log-done { background:var(--danger-bg); color:var(--danger); border:1px solid var(--danger-bd); font-size:0.7rem; }
+.mc-detail { padding:0 14px 10px; font-size:0.68rem; color:var(--muted); }
+.mc-expand { padding:8px 14px 9px; border-top:1px solid var(--border); display:flex; justify-content:space-between; align-items:center; cursor:pointer; background:none; }
+.mc-expand-lbl { font-size:0.63rem; color:var(--muted); letter-spacing:0.04em; }
+.mc-settings { padding:12px 14px 4px; border-top:1px solid var(--border); background:var(--surface2); }
 .set-row { display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; }
 .set-row label { font-size:0.63rem; color:var(--muted); text-transform:uppercase; letter-spacing:0.05em; flex:1; }
 .set-row input { background:var(--surface); border:1px solid var(--border); border-radius:5px; color:var(--text); font-size:0.8rem; padding:5px 7px; width:76px; text-align:right; -webkit-appearance:none; }
-.save-btn { width:100%; padding:7px; background:none; color:var(--accent); border:1px solid var(--accent); border-radius:6px; font-size:0.75rem; cursor:pointer; margin-top:7px; -webkit-appearance:none; }
-.remove-med-btn { width:100%; padding:7px; background:none; color:var(--danger); border:1px solid var(--danger-bd); border-radius:6px; font-size:0.75rem; cursor:pointer; margin-top:6px; -webkit-appearance:none; }
+.save-btn { width:100%; padding:7px; background:none; color:var(--accent); border:1px solid var(--accent); border-radius:6px; font-size:0.75rem; cursor:pointer; margin-top:4px; margin-bottom:6px; -webkit-appearance:none; }
+.remove-med-btn { width:100%; padding:7px; background:none; color:var(--danger); border:1px solid var(--danger-bd); border-radius:6px; font-size:0.75rem; cursor:pointer; margin-bottom:8px; -webkit-appearance:none; }
 
 /* ── History ── */
 .hist-wrap { margin:0 14px; }
@@ -327,17 +303,10 @@ body { background:var(--bg); color:var(--text); font-family:-apple-system,Helvet
   <!-- Person tab -->
   <div id="tab-person" class="tab-pane" style="display:none">
     <div class="warn-box" id="person-warn-box" style="display:none"></div>
-    <div class="sec-title">Summary</div>
-    <div class="summary-wrap">
-      <div class="sum-head">
-        <div class="sum-hcell sum-col1">Drug</div>
-        <div class="sum-hcell sum-col2">Status</div>
-        <div class="sum-hcell sum-col3">Next / Countdown</div>
-        <div class="sum-hcell sum-col4"></div>
-      </div>
-      <div id="person-summary"></div>
+    <div style="padding:10px 14px 4px;">
+      <button class="log-med-btn" onclick="openQuickLogModal()">&#10010; Log a medicine</button>
     </div>
-    <div class="sec-title-row">
+    <div class="sec-title-row" style="margin-top:12px;">
       <div class="sec-title" id="meds-sec-title">Medications</div>
       <button class="sec-add-btn" onclick="switchToAddMed()">+ Add med</button>
     </div>
@@ -748,7 +717,6 @@ function renderPersonTab() {
   if (!person) { return; }
   setTxt('meds-sec-title', person.name+"'s medications");
   updatePersonWarn(person);
-  renderPersonSummary();
   renderPersonMeds();
   renderPersonHist();
 }
@@ -764,30 +732,6 @@ function updatePersonWarn(person) {
     for (var i=0;i<warns.length;i++) { var w=el('div'); w.appendChild(txt('⚠ '+warns[i])); box.appendChild(w); }
   } else { box.style.display='none'; }
 }
-function renderPersonSummary() {
-  var pId=activePersonId, pMeds=personMeds[pId]||[];
-  var cont=clrEl('person-summary'); if (!cont) return;
-  if (!pMeds.length) { var em=el('div','empty'); em.appendChild(txt('No medications yet')); cont.appendChild(em); return; }
-  for (var i=0;i<pMeds.length;i++) {
-    var mc=pMeds[i], le=findLibEntry(mc.medId), last=lastTaken(pId,mc.medId);
-    var st=medStatus(pId,mc), nt=nextTs(pId,mc), tc=todayCount(pId,mc.medId), rem=mc.max-tc, isLast=(tc===mc.max-1);
-    var row=el('div','sum-row');
-    var c1=el('div','sum-c1'); c1.appendChild(txt(le?le.name:mc.medId));
-    var sub=el('div','sum-c1-sub'); sub.appendChild(txt(mc.dose+' · '+rem+'/'+mc.max+' left')); c1.appendChild(sub); row.appendChild(c1);
-    var c2=el('div','sum-c2'), bd, bc;
-    if (st==='exhausted'){bd='Done';bc='badge b-done';}else if(st==='waiting'){bd='Wait';bc='badge b-wait';}else if(last){bd='Ready';bc='badge b-ok';}else{bd='None';bc='badge b-none';}
-    var bdg=el('span',bc); bdg.appendChild(txt(bd)); c2.appendChild(bdg); row.appendChild(c2);
-    var c3=el('div','sum-c3'), nd, nc;
-    if(st==='exhausted'){nd='Max reached';nc='sum-c3 col-danger';}else if(st==='waiting'&&nt){nd=fmtTime(nt)+' ('+hrsToGo(nt)+')';nc='sum-c3 col-warn';}else if(st==='ready'&&last){nd='Ready now';nc='sum-c3 col-ok';}else{nd='Not taken';nc='sum-c3 col-muted';}
-    c3.className=nc; c3.appendChild(txt(nd)); row.appendChild(c3);
-    var c4=el('div','sum-c4'), lb;
-    if(st==='exhausted'){lb=el('button','sum-log-btn s-done');lb.appendChild(txt('Done'));lb.disabled=true;}
-    else if(st==='waiting'){lb=el('button','sum-log-btn s-wait');lb.appendChild(txt(hrsToGo(nt)));lb.disabled=true;}
-    else if(isLast){lb=el('button','sum-log-btn s-last');lb.appendChild(txt('Last dose'));(function(p,m){lb.onclick=function(){openLogModal(p,m);};})(pId,mc);}
-    else{lb=el('button','sum-log-btn s-go');lb.appendChild(txt('Log dose'));(function(p,m){lb.onclick=function(){openLogModal(p,m);};})(pId,mc);}
-    c4.appendChild(lb); row.appendChild(c4); cont.appendChild(row);
-  }
-}
 function renderPersonMeds() {
   var pId=activePersonId, pMeds=personMeds[pId]||[];
   var cont=clrEl('person-med-list'); if (!cont) return;
@@ -796,51 +740,65 @@ function renderPersonMeds() {
     var mc=pMeds[i], le=findLibEntry(mc.medId), st=medStatus(pId,mc), last=lastTaken(pId,mc.medId);
     var nt=nextTs(pId,mc), tc=todayCount(pId,mc.medId), rem=mc.max-tc, isLast=(tc===mc.max-1);
     var key=pId+'_'+mc.medId, sOpen=openSets[key];
-    var card=el('div','card '+st);
-    var head=el('div','card-head');
-    var nm=el('span','med-name'); nm.appendChild(txt(le?le.name:mc.medId));
+
+    var card=el('div','mc-card '+st);
+
+    // Main row: name + meta + badge + log button
+    var main=el('div','mc-main');
+    var info=el('div','mc-info');
+    var nm=el('div','mc-name'); nm.appendChild(txt(le?le.name:mc.medId)); info.appendChild(nm);
+    var metaTxt=mc.dose+' · every '+mc.hrs+'h · '+rem+' of '+mc.max+' left today';
+    var meta=el('div','mc-meta'); meta.appendChild(txt(metaTxt)); info.appendChild(meta);
+    main.appendChild(info);
+
+    var acts=el('div','mc-actions');
     var bc,bt;
-    if(st==='exhausted'){bc='badge b-done';bt='Done today';}else if(st==='waiting'){bc='badge b-wait';bt='Wait';}else if(last){bc='badge b-ok';bt='Ready';}else{bc='badge b-none';bt='Not taken';}
-    var bdg=el('span',bc); bdg.appendChild(txt(bt));
-    head.appendChild(nm); head.appendChild(bdg); card.appendChild(head);
-    var body=el('div','card-body');
-    var stats=el('div','stats');
-    var lastStr=last?fmtAgo(last.ts)+' ('+fmtTime(last.ts)+')':'—';
-    var nextStr=(st==='waiting'&&nt)?fmtTime(nt)+' ('+fmtCountdown(nt)+')':(st==='ready'&&last?'Now':'—');
-    var remStr=rem+' of '+mc.max+' left', remCls='sval'+(rem===0?' red':rem===1?' warn':' ok');
-    [{label:'Last taken',val:lastStr,cls:'sval hi'},{label:'Next available',val:nextStr,cls:'sval'},{label:'Doses today',val:remStr,cls:remCls},{label:'Interval/Dose',val:mc.hrs+'h / '+mc.dose,cls:'sval'}].forEach(function(sd){
-      var box=el('div','stat'), lbl=el('div','slabel'), val=el('div',sd.cls);
-      lbl.appendChild(txt(sd.label)); val.appendChild(txt(sd.val)); box.appendChild(lbl); box.appendChild(val); stats.appendChild(box);
-    });
-    body.appendChild(stats);
-    var btnTxt, btnCls, disabled=false;
-    if(st==='exhausted'){btnTxt='Max doses reached today';btnCls='btn btn-done';disabled=true;}
-    else if(st==='waiting'){btnTxt='Next dose '+fmtCountdown(nt);btnCls='btn btn-wait';disabled=true;}
-    else if(isLast){btnTxt='Log dose — '+mc.dose+' (last today)';btnCls='btn btn-last';}
-    else{btnTxt='Log dose — '+mc.dose;btnCls='btn btn-go';}
-    var btn=el('button',btnCls); btn.appendChild(txt(btnTxt)); if(disabled) btn.disabled=true;
-    (function(p,m){btn.onclick=function(){openLogModal(p,m);};})(pId,mc);
-    body.appendChild(btn);
-    var tog=el('div','set-toggle');
-    var togLbl=el('span'); togLbl.appendChild(txt('Settings'));
-    var togArr=el('span'); togArr.appendChild(txt(sOpen?'▲':'▼'));
-    tog.appendChild(togLbl); tog.appendChild(togArr);
+    if(st==='exhausted'){bc='badge b-done';bt='Done';}else if(st==='waiting'){bc='badge b-wait';bt='Wait';}else if(last){bc='badge b-ok';bt='Ready';}else{bc='badge b-none';bt='None';}
+    var bdg=el('span',bc); bdg.appendChild(txt(bt)); acts.appendChild(bdg);
+
+    var logBtnCls, logBtnTxt, disabled=false;
+    if(st==='exhausted'){logBtnCls='mc-log-btn mc-log-done';logBtnTxt='Done';disabled=true;}
+    else if(st==='waiting'){logBtnCls='mc-log-btn mc-log-wait';logBtnTxt=hrsToGo(nt);disabled=true;}
+    else if(isLast){logBtnCls='mc-log-btn mc-log-last';logBtnTxt='Last dose';}
+    else{logBtnCls='mc-log-btn mc-log-go';logBtnTxt='Log';}
+    var logBtn=el('button',logBtnCls); logBtn.appendChild(txt(logBtnTxt)); if(disabled) logBtn.disabled=true;
+    (function(p,m){logBtn.onclick=function(){openLogModal(p,m);};})(pId,mc);
+    acts.appendChild(logBtn);
+    main.appendChild(acts);
+    card.appendChild(main);
+
+    // Detail line: last taken + next available
+    var lastStr=last?'Last: '+fmtAgo(last.ts)+' at '+fmtTime(last.ts):'Not yet taken today';
+    var nextStr='';
+    if(st==='waiting'&&nt) nextStr=' · Next at '+fmtTime(nt)+' ('+fmtCountdown(nt)+')';
+    else if(st==='ready'&&last) nextStr=' · Ready now';
+    var detail=el('div','mc-detail'); detail.appendChild(txt(lastStr+nextStr)); card.appendChild(detail);
+
+    // Settings toggle
+    var tog=el('div','mc-expand');
+    var togLbl=el('span','mc-expand-lbl'); togLbl.appendChild(txt('Settings '+(sOpen?'▲':'▼')));
+    tog.appendChild(togLbl);
     (function(k){tog.onclick=function(){openSets[k]=!openSets[k];renderPersonMeds();};})(key);
-    body.appendChild(tog);
-    var panel=el('div','set-panel'+(sOpen?' open':''));
-    [{id:'sd-'+mc.medId,label:'Dose label',type:'text',val:mc.dose},{id:'si-'+mc.medId,label:'Interval (hrs)',type:'number',val:mc.hrs,step:'0.5',min:'1'},{id:'sm-'+mc.medId,label:'Max per day',type:'number',val:mc.max,step:'1',min:'1'}].forEach(function(fd){
-      var r=el('div','set-row'), rl=el('label'), ri=el('input');
-      rl.appendChild(txt(fd.label)); ri.id=fd.id; ri.type=fd.type; ri.value=fd.val;
-      if(fd.step)ri.step=fd.step; if(fd.min)ri.setAttribute('min',fd.min);
-      r.appendChild(rl); r.appendChild(ri); panel.appendChild(r);
-    });
-    var sav=el('button','save-btn'); sav.appendChild(txt('Save'));
-    (function(p,m){sav.onclick=function(){saveMedSettings(p,m);};})(pId,mc);
-    panel.appendChild(sav);
-    var remB=el('button','remove-med-btn'); remB.appendChild(txt('Remove medication'));
-    (function(p,mid){remB.onclick=function(){if(confirm('Remove this medication from '+findMember(p).name+'?')){removeMedFromPerson(p,mid);}};})(pId,mc.medId);
-    panel.appendChild(remB);
-    body.appendChild(panel); card.appendChild(body); cont.appendChild(card);
+    card.appendChild(tog);
+
+    if (sOpen) {
+      var panel=el('div','mc-settings');
+      [{id:'sd-'+mc.medId,label:'Dose label',type:'text',val:mc.dose},{id:'si-'+mc.medId,label:'Interval (hrs)',type:'number',val:mc.hrs,step:'0.5',min:'1'},{id:'sm-'+mc.medId,label:'Max per day',type:'number',val:mc.max,step:'1',min:'1'}].forEach(function(fd){
+        var r=el('div','set-row'), rl=el('label'), ri=el('input');
+        rl.appendChild(txt(fd.label)); ri.id=fd.id; ri.type=fd.type; ri.value=fd.val;
+        if(fd.step)ri.step=fd.step; if(fd.min)ri.setAttribute('min',fd.min);
+        r.appendChild(rl); r.appendChild(ri); panel.appendChild(r);
+      });
+      var sav=el('button','save-btn'); sav.appendChild(txt('Save changes'));
+      (function(p,m){sav.onclick=function(){saveMedSettings(p,m);};})(pId,mc);
+      panel.appendChild(sav);
+      var remB=el('button','remove-med-btn'); remB.appendChild(txt('Remove medication'));
+      (function(p,mid){remB.onclick=function(){if(confirm('Remove this medication from '+findMember(p).name+'?')){removeMedFromPerson(p,mid);}};})(pId,mc.medId);
+      panel.appendChild(remB);
+      card.appendChild(panel);
+    }
+
+    cont.appendChild(card);
   }
 }
 function renderPersonHist() {
@@ -1036,8 +994,11 @@ function quickLogStep2(personId) {
   buildModal('Log a medicine', 'Which medicine for '+member.name+'?');
   var body=document.getElementById('modal-body');
 
-  // Build med list: recently used by this person first, then rest of library
+  // Build favourites: assigned meds first, then recently used from history
   var recentIds=[];
+  (personMeds[personId]||[]).forEach(function(m){
+    if (recentIds.indexOf(m.medId)===-1) recentIds.push(m.medId);
+  });
   var sorted=hist.filter(function(h){return h.personId===personId;})
     .sort(function(a,b){return b.ts-a.ts;});
   for (var i=0;i<sorted.length;i++) {
