@@ -1041,29 +1041,54 @@ function quickLogStep2(personId) {
     if (ai===-1) return 1;
     if (bi===-1) return -1;
     return ai-bi;
-  });
+  }).filter(function(le){ return !!getDoseForMember(personId,le.id); });
 
-  var list=el('div'); list.style.cssText='display:flex;flex-direction:column;gap:6px;max-height:50vh;overflow-y:auto;margin-bottom:4px;';
-  for (var j=0;j<allMeds.length;j++) {
-    (function(le) {
-      var doseInfo=getDoseForMember(personId,le.id);
-      if (!doseInfo) return; // age-inappropriate — skip
-      var btn=el('button','modal-cancel');
-      btn.style.cssText='text-align:left;padding:10px 12px;border-radius:8px;';
-      var nm=el('span'); nm.style.cssText='font-weight:700;font-size:0.9rem;display:block;';
-      nm.appendChild(txt(le.name+(recentIds.indexOf(le.id)!==-1?' ★':'')));
-      var ds=el('span'); ds.style.cssText='font-size:0.72rem;color:#5a7a90;';
-      ds.appendChild(txt(doseInfo.dose+' · every '+doseInfo.hrs+'h · max '+doseInfo.max+'/day'));
-      btn.appendChild(nm); btn.appendChild(ds);
-      btn.onclick=function(){ quickLogStep3(personId, le.id, doseInfo); };
-      list.appendChild(btn);
-    })(allMeds[j]);
+  // Search bar
+  var search=el('input');
+  search.type='text'; search.placeholder='Search by name or brand (e.g. Calpol)…';
+  search.style.cssText='width:100%;padding:9px 12px;border:1px solid #c8d8e8;border-radius:8px;font-size:0.9rem;margin-bottom:8px;background:#e8f0f7;color:#0f2030;-webkit-appearance:none;';
+  body.appendChild(search);
+
+  var list=el('div'); list.id='ql-med-list'; list.style.cssText='display:flex;flex-direction:column;gap:6px;max-height:45vh;overflow-y:auto;margin-bottom:4px;';
+
+  function renderMedList(filter) {
+    list.innerHTML='';
+    var q=(filter||'').toLowerCase().trim();
+    var shown=allMeds.filter(function(le){
+      if (!q) return true;
+      return (le.name||'').toLowerCase().indexOf(q)!==-1||(le.notes||'').toLowerCase().indexOf(q)!==-1;
+    });
+    if (!shown.length) {
+      var none=el('div'); none.style.cssText='color:#5a7a90;font-size:0.8rem;padding:10px 4px;';
+      none.appendChild(txt('No medicines found')); list.appendChild(none);
+    }
+    for (var j=0;j<shown.length;j++) {
+      (function(le) {
+        var doseInfo=getDoseForMember(personId,le.id);
+        var btn=el('button','modal-cancel');
+        btn.style.cssText='text-align:left;padding:10px 12px;border-radius:8px;';
+        var nm=el('span'); nm.style.cssText='font-weight:700;font-size:0.9rem;display:block;';
+        nm.appendChild(txt(le.name+(recentIds.indexOf(le.id)!==-1?' ★':'')));
+        var ds=el('span'); ds.style.cssText='font-size:0.72rem;color:#5a7a90;';
+        var dsText=doseInfo.dose+' · every '+doseInfo.hrs+'h · max '+doseInfo.max+'/day';
+        if (le.notes) dsText+=' · '+le.notes.split('.')[0]; // show first note (brand name)
+        ds.appendChild(txt(dsText));
+        btn.appendChild(nm); btn.appendChild(ds);
+        btn.onclick=function(){ quickLogStep3(personId, le.id, doseInfo); };
+        list.appendChild(btn);
+      })(shown[j]);
+    }
   }
+
+  search.oninput=function(){ renderMedList(search.value); };
+  renderMedList('');
   body.appendChild(list);
+
   addModalBtns([
     {label:'Back',cls:'modal-cancel',fn:openQuickLogModal},
     {label:'Cancel',cls:'modal-cancel',fn:closeModal}
   ]);
+  setTimeout(function(){ search.focus(); }, 100);
 }
 
 function quickLogStep3(personId, medId, doseInfo) {
