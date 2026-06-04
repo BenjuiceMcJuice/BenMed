@@ -9,5 +9,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Stamp cache version with commit hash
+        run: sed -i "s/benmed-v[0-9a-f]*/benmed-$(git rev-parse --short HEAD)/" sw.js
       - run: npm install -g firebase-tools
       - run: firebase deploy --only hosting --token "${{ secrets.FIREBASE_TOKEN }}" --project benmed-52d2b
