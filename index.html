@@ -728,9 +728,20 @@ function renderDashboard() {
     var age2=fm.dob?formatAge(fm.dob):null;
     if (age2) { var ageS=el('span','fc-age'); ageS.appendChild(txt(' · '+age2)); cName.appendChild(ageS); }
     card.appendChild(cName);
-    var recentMeds=fPMeds.filter(function(mc){
-      var fl=lastTaken(fm.id,mc.medId);
-      return fl&&(now-fl.ts)<48*3600000;
+    // Build med list from history (last 48h) so removing a fav doesn't wipe dashboard
+    var seenMedIds={}, recentMedIds=[];
+    for (var hi2=0;hi2<hist.length;hi2++) {
+      var he=hist[hi2];
+      if (he.personId===fm.id&&(now-he.ts)<48*3600000&&!seenMedIds[he.medId]) {
+        seenMedIds[he.medId]=true;
+        recentMedIds.push(he.medId);
+      }
+    }
+    var recentMeds=recentMedIds.map(function(mid){
+      var cfg=null;
+      for (var ci=0;ci<fPMeds.length;ci++){if(fPMeds[ci].medId===mid){cfg=fPMeds[ci];break;}}
+      if (!cfg) { var df=getDoseForMember(fm.id,mid); cfg={medId:mid,hrs:(df&&df.hrs)||6,doses:(df&&df.doses)||null,unit:(df&&df.unit)||null}; }
+      return cfg;
     });
     if (!recentMeds.length) {
       var nm=el('div','fc-nomeds'); nm.appendChild(txt('No recent medications')); card.appendChild(nm);
