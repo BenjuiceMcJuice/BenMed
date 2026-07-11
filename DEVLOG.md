@@ -4,7 +4,7 @@
 
 ## Feedback: shared Benjuicey Apps standard
 
-Feedback across all of Ben's apps follows one standard — see `benjuicey-apps/docs/feedback-standard.md` (the single source of truth). Submissions from every app land in one shared backend, each stamped with the app's trigram.
+Feedback across all of Ben's apps follows one standard — see the central docs in `benjuicey-apps/docs/`: **feedback-standard.md** (the standard) and **feedback-how-it-works.md** (end-to-end flow + how Claude triages submissions). Submissions from every app land in one shared backend, each stamped with the app's trigram.
 
 - **This app's trigram:** `MED`
 - **Status:** ❌ **not yet wired up** — to adopt.
