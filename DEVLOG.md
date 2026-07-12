@@ -2,6 +2,20 @@
 
 ---
 
+## Feedback: shared Benjuicey Apps standard
+
+Feedback across all of Ben's apps follows one standard — see the central docs in `benjuicey-apps/docs/`: **feedback-standard.md** (the standard) and **feedback-how-it-works.md** (end-to-end flow + how Claude triages submissions). Submissions from every app land in one shared backend, each stamped with the app's trigram.
+
+- **This app's trigram:** `MED`
+- **Status:** ❌ **not yet wired up** — to adopt.
+- **How to adopt:** add `benmed`'s live origin to the Worker's `ALLOWED_ORIGINS`, then drop in the shared widget:
+  ```html
+  <script defer src="https://benjuicey-feedback.benjuicemcjuice.workers.dev/widget.js" data-app-id="benmed" data-accent="#RRGGBB"></script>
+  ```
+  Uniform schema + canonical categories (`bug`/`content`/`request`/`general`) come for free. Note: BenMed's own Firebase project is for medication data sync — feedback is separate and must go to the shared Worker, not a local collection.
+
+---
+
 ## 2026-06-03 — Family Medication Tracker Refactor
 
 **Branch:** `claude/family-medication-tracker-2jdip`
